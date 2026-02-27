@@ -368,6 +368,27 @@ export function useOnboarding({
         }
       }
 
+      // Custom endpoint must be a valid http(s) URL.
+      // This catches common mistakes like pasting an API key into the endpoint field.
+      if (data.baseUrl?.trim()) {
+        try {
+          const parsed = new URL(data.baseUrl.trim())
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            throw new Error('invalid protocol')
+          }
+        } catch {
+          const maybeApiKey = /^sk-|^AIza|^gsk_|^xai-|^hf_/i.test(data.baseUrl.trim())
+          setState(s => ({
+            ...s,
+            credentialStatus: 'error',
+            errorMessage: maybeApiKey
+              ? 'Endpoint looks like an API key. Please paste a URL (for example: https://api.anthropic.com).'
+              : 'Endpoint must be a valid URL (for example: https://api.anthropic.com).',
+          }))
+          return
+        }
+      }
+
       // Validate connection by spawning a lightweight subprocess test
       const testResult = await window.electronAPI.testLlmConnectionSetup({
         provider: isPiApiKeyFlow ? 'pi' : 'anthropic',
@@ -545,11 +566,13 @@ export function useOnboarding({
 
   // Map ProviderChoice → ApiSetupMethod and navigate to the right step
   const handleSelectProvider = useCallback((choice: ProviderChoice) => {
+    // "I have an API key" should default to Claude Code backend (Anthropic-compatible),
+    // so users can use custom endpoints/providers without requiring the Pi subprocess.
     const CHOICE_TO_METHOD: Record<Exclude<ProviderChoice, 'local'>, ApiSetupMethod> = {
       claude: 'claude_oauth',
       chatgpt: 'pi_chatgpt_oauth',
       copilot: 'pi_copilot_oauth',
-      api_key: 'pi_api_key',
+      api_key: 'anthropic_api_key',
     }
 
     if (choice === 'local') {

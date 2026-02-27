@@ -5,7 +5,8 @@ copyright: Copyright © 2025 Craft Docs Ltd.
 electronVersion: "39.2.7"
 
 # Hook to compile macOS 26+ Liquid Glass icon after packaging
-afterPack: scripts/afterPack.cjs
+# Use repository-root relative path because electron-builder resolves hooks from cwd.
+afterPack: apps/electron/scripts/afterPack.cjs
 
 directories:
   output: release
@@ -71,8 +72,8 @@ mac:
         - x64
   hardenedRuntime: true
   gatekeeperAssess: false
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+  entitlements: apps/electron/build/entitlements.mac.plist
+  entitlementsInherit: apps/electron/build/entitlements.mac.plist
   extraResources:
     - from: node_modules/@anthropic-ai/claude-agent-sdk
       to: app/node_modules/@anthropic-ai/claude-agent-sdk

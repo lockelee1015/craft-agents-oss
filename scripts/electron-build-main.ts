@@ -16,6 +16,7 @@ const SESSION_TOOLS_CORE_DIR = join(ROOT_DIR, "packages/session-tools-core");
 const SESSION_SERVER_DIR = join(ROOT_DIR, "packages/session-mcp-server");
 const SESSION_SERVER_OUTPUT = join(SESSION_SERVER_DIR, "dist/index.js");
 const PI_AGENT_SERVER_DIR = join(ROOT_DIR, "packages/pi-agent-server");
+const PI_AGENT_SERVER_ENTRY = join(PI_AGENT_SERVER_DIR, "src/index.ts");
 const PI_AGENT_SERVER_OUTPUT = join(PI_AGENT_SERVER_DIR, "dist/index.js");
 
 // Load .env file if it exists
@@ -207,6 +208,11 @@ async function buildSessionServer(): Promise<void> {
 // Build the Pi Agent Server (subprocess for Pi SDK sessions)
 async function buildPiAgentServer(): Promise<void> {
   console.log("🥧 Building Pi Agent Server...");
+
+  if (!existsSync(PI_AGENT_SERVER_ENTRY)) {
+    console.warn("⚠️ Pi agent server source not found. Skipping Pi server build (Pi backend unavailable in this checkout).");
+    return;
+  }
 
   // Ensure dist directory exists
   const distDir = join(PI_AGENT_SERVER_DIR, "dist");

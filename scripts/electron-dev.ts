@@ -17,6 +17,7 @@ const SESSION_SERVER_DIR = join(ROOT_DIR, "packages/session-mcp-server");
 const SESSION_SERVER_OUTPUT = join(SESSION_SERVER_DIR, "dist/index.js");
 // Pi agent server path (subprocess for Pi SDK sessions)
 const PI_AGENT_SERVER_DIR = join(ROOT_DIR, "packages/pi-agent-server");
+const PI_AGENT_SERVER_ENTRY = join(PI_AGENT_SERVER_DIR, "src/index.ts");
 const PI_AGENT_SERVER_OUTPUT = join(PI_AGENT_SERVER_DIR, "dist/index.js");
 
 // Platform-specific binary paths (bun creates .exe on Windows, no extension on Unix)
@@ -154,9 +155,7 @@ async function buildMcpServers(): Promise<void> {
 
   // Ensure dist directories exist
   const sessionDistDir = join(SESSION_SERVER_DIR, "dist");
-  const piDistDir = join(PI_AGENT_SERVER_DIR, "dist");
   if (!existsSync(sessionDistDir)) mkdirSync(sessionDistDir, { recursive: true });
-  if (!existsSync(piDistDir)) mkdirSync(piDistDir, { recursive: true });
 
   // Build session MCP server (esbuild, packages external — deps resolve from root node_modules)
   const sessionResult = await runEsbuild(
@@ -171,6 +170,14 @@ async function buildMcpServers(): Promise<void> {
     process.exit(1);
   }
   console.log("✅ Session MCP server built");
+
+  if (!existsSync(PI_AGENT_SERVER_ENTRY)) {
+    console.warn("⚠️ Pi agent server source not found. Skipping Pi server build (Pi backend unavailable in this checkout).");
+    return;
+  }
+
+  const piDistDir = join(PI_AGENT_SERVER_DIR, "dist");
+  if (!existsSync(piDistDir)) mkdirSync(piDistDir, { recursive: true });
 
   // Build Pi agent server with bun (not esbuild) because its Pi SDK deps are ESM-only.
   // esbuild with packages:external leaves them as require() calls which fail at runtime.
