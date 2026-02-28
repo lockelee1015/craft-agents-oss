@@ -1420,7 +1420,6 @@ export default function App() {
           onSelectProvider={onboarding.handleSelectProvider}
           onSelectApiSetupMethod={onboarding.handleSelectApiSetupMethod}
           onSubmitCredential={onboarding.handleSubmitCredential}
-          onSubmitLocalModel={onboarding.handleSubmitLocalModel}
           onStartOAuth={onboarding.handleStartOAuth}
           onFinish={onboarding.handleFinish}
           isWaitingForCode={onboarding.isWaitingForCode}

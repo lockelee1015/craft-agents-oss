@@ -3,7 +3,6 @@ import { WelcomeStep } from "./WelcomeStep"
 import type { ApiSetupMethod } from "./APISetupStep"
 import { ProviderSelectStep, type ProviderChoice } from "./ProviderSelectStep"
 import { CredentialsStep, type CredentialStatus } from "./CredentialsStep"
-import { LocalModelStep, type LocalModelSubmitData } from "./LocalModelStep"
 import { CompletionStep } from "./CompletionStep"
 import { GitBashWarning, type GitBashStatus } from "./GitBashWarning"
 import type { ApiKeySubmitData } from "../apisetup"
@@ -12,7 +11,6 @@ export type OnboardingStep =
   | 'welcome'
   | 'git-bash'
   | 'provider-select'
-  | 'local-model'
   | 'credentials'
   | 'complete'
 
@@ -57,9 +55,6 @@ interface OnboardingWizardProps {
   // Provider select (new flow)
   onSelectProvider?: (choice: ProviderChoice) => void
 
-  // Local model
-  onSubmitLocalModel?: (data: LocalModelSubmitData) => void
-
   // Edit mode (pre-fill existing connection values)
   editInitialValues?: {
     apiKey?: string
@@ -77,7 +72,7 @@ interface OnboardingWizardProps {
  * Manages the step-by-step flow for setting up Craft Agent:
  * 1. Welcome
  * 2. Provider Select (Claude Code / Codex / API Key)
- * 3. Credentials (API Key or OAuth) or Local Model
+ * 3. Credentials (API Key or OAuth)
  * 4. Completion
  */
 export function OnboardingWizard({
@@ -99,8 +94,6 @@ export function OnboardingWizard({
   onClearError,
   // Provider select (new flow)
   onSelectProvider,
-  // Local model
-  onSubmitLocalModel,
   // Edit mode
   editInitialValues,
   className
@@ -134,16 +127,6 @@ export function OnboardingWizard({
         return (
           <ProviderSelectStep
             onSelect={onSelectProvider!}
-          />
-        )
-
-      case 'local-model':
-        return (
-          <LocalModelStep
-            onSubmit={onSubmitLocalModel!}
-            onBack={onBack}
-            status={state.credentialStatus === 'validating' ? 'validating' : state.credentialStatus === 'error' ? 'error' : 'idle'}
-            errorMessage={state.errorMessage}
           />
         )
 

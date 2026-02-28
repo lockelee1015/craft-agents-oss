@@ -16,7 +16,6 @@ import type {
   ApiSetupMethod,
 } from '@/components/onboarding'
 import type { ProviderChoice } from '@/components/onboarding/ProviderSelectStep'
-import type { LocalModelSubmitData } from '@/components/onboarding/LocalModelStep'
 import type { ApiKeySubmitData } from '@/components/apisetup'
 import type { SetupNeeds, LlmConnectionSetup } from '../../shared/types'
 
@@ -57,8 +56,6 @@ interface UseOnboardingReturn {
   // Credentials
   handleSubmitCredential: (data: ApiKeySubmitData) => void
 
-  // Local model
-  handleSubmitLocalModel: (data: LocalModelSubmitData) => void
   handleStartOAuth: (methodOverride?: ApiSetupMethod) => void
 
   // Claude OAuth (two-step flow)
@@ -89,7 +86,6 @@ export const BASE_SLUG_FOR_METHOD: Record<ApiSetupMethod, string> = {
   anthropic_api_key: 'anthropic-api',
   claude_oauth: 'claude-max',
   pi_chatgpt_oauth: 'chatgpt-plus',
-  pi_copilot_oauth: 'github-copilot',
   pi_api_key: 'pi-api-key',
 }
 
@@ -138,7 +134,6 @@ export function apiSetupMethodToConnectionSetup(
         credential: options.credential,
       }
     case 'pi_chatgpt_oauth':
-    case 'pi_copilot_oauth':
       return {
         slug,
         credential: options.credential,
@@ -268,10 +263,6 @@ export function useOnboarding({
         setState(s => ({ ...s, step: 'provider-select' }))
         break
 
-      case 'local-model':
-        // Handled by handleSubmitLocalModel
-        break
-
       case 'credentials':
         // Handled by handleSubmitCredential
         break
@@ -303,9 +294,6 @@ export function useOnboarding({
         }
         break
       case 'credentials':
-        setState(s => ({ ...s, step: 'provider-select', credentialStatus: 'idle', errorMessage: undefined }))
-        break
-      case 'local-model':
         setState(s => ({ ...s, step: 'provider-select', credentialStatus: 'idle', errorMessage: undefined }))
         break
     }
@@ -535,7 +523,7 @@ export function useOnboarding({
   const handleSelectProvider = useCallback((choice: ProviderChoice) => {
     // "I have an API key" should default to Claude Code backend (Anthropic-compatible),
     // so users can use custom endpoints/providers without requiring the Pi subprocess.
-    const CHOICE_TO_METHOD: Record<Exclude<ProviderChoice, 'local'>, ApiSetupMethod> = {
+    const CHOICE_TO_METHOD: Record<ProviderChoice, ApiSetupMethod> = {
       claude: 'claude_oauth',
       chatgpt: 'pi_chatgpt_oauth',
       api_key: 'anthropic_api_key',
@@ -592,32 +580,6 @@ export function useOnboarding({
       }))
     }
   }, [saveAndValidateConnection, editingSlug, existingSlugs])
-
-  // Submit local model configuration (Ollama or any OpenAI-compatible local server)
-  const handleSubmitLocalModel = useCallback(async (data: LocalModelSubmitData) => {
-    setState(s => ({ ...s, credentialStatus: 'validating', errorMessage: undefined }))
-
-    try {
-      // apiSetupMethod was set to 'anthropic_api_key' when entering local-model step
-      const saved = await handleSaveConfig(undefined, {
-        baseUrl: data.baseUrl,
-        connectionDefaultModel: data.model,
-        models: data.models,
-      })
-
-      if (saved) {
-        setState(s => ({ ...s, credentialStatus: 'success', step: 'complete' }))
-      } else {
-        setState(s => ({ ...s, credentialStatus: 'error' }))
-      }
-    } catch (error) {
-      setState(s => ({
-        ...s,
-        credentialStatus: 'error',
-        errorMessage: error instanceof Error ? error.message : 'Failed to save configuration',
-      }))
-    }
-  }, [handleSaveConfig])
 
   // Cancel OAuth flow
   const handleCancelOAuth = useCallback(async () => {
@@ -716,7 +678,6 @@ export function useOnboarding({
     handleSelectProvider,
     handleSelectApiSetupMethod,
     handleSubmitCredential,
-    handleSubmitLocalModel,
     handleStartOAuth,
     // Two-step OAuth flow
     isWaitingForCode,
