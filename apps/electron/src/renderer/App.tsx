@@ -1420,13 +1420,11 @@ export default function App() {
           onSelectProvider={onboarding.handleSelectProvider}
           onSelectApiSetupMethod={onboarding.handleSelectApiSetupMethod}
           onSubmitCredential={onboarding.handleSubmitCredential}
-          onSubmitLocalModel={onboarding.handleSubmitLocalModel}
           onStartOAuth={onboarding.handleStartOAuth}
           onFinish={onboarding.handleFinish}
           isWaitingForCode={onboarding.isWaitingForCode}
           onSubmitAuthCode={onboarding.handleSubmitAuthCode}
           onCancelOAuth={onboarding.handleCancelOAuth}
-          copilotDeviceCode={onboarding.copilotDeviceCode}
           onBrowseGitBash={onboarding.handleBrowseGitBash}
           onUseGitBashPath={onboarding.handleUseGitBashPath}
           onRecheckGitBash={onboarding.handleRecheckGitBash}
