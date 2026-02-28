@@ -93,7 +93,6 @@ export const onboardingComponents: ComponentEntry[] = [
             { label: 'Claude OAuth', value: 'claude_oauth' },
             { label: 'Anthropic API Key', value: 'anthropic_api_key' },
             { label: 'CAB ChatGPT OAuth', value: 'pi_chatgpt_oauth' },
-            { label: 'CAB Copilot OAuth', value: 'pi_copilot_oauth' },
             { label: 'CAB API Key', value: 'pi_api_key' },
           ],
         },
@@ -106,8 +105,7 @@ export const onboardingComponents: ComponentEntry[] = [
           type: 'select',
           options: [
             { label: 'Anthropic', value: 'anthropic' },
-            { label: 'OpenAI', value: 'openai' },
-            { label: 'GitHub Copilot', value: 'copilot' },
+            { label: 'Craft Agents Backend', value: 'pi' },
           ],
         },
         defaultValue: 'anthropic',
@@ -119,7 +117,6 @@ export const onboardingComponents: ComponentEntry[] = [
       { name: 'Anthropic - API Key Selected', props: { selectedMethod: 'anthropic_api_key', initialSegment: 'anthropic' } },
       { name: 'CAB Segment', props: { selectedMethod: null, initialSegment: 'pi' } },
       { name: 'CAB - ChatGPT OAuth Selected', props: { selectedMethod: 'pi_chatgpt_oauth', initialSegment: 'pi' } },
-      { name: 'CAB - Copilot OAuth Selected', props: { selectedMethod: 'pi_copilot_oauth', initialSegment: 'pi' } },
       { name: 'CAB - API Key Selected', props: { selectedMethod: 'pi_api_key', initialSegment: 'pi' } },
     ],
     mockData: () => ({
@@ -219,62 +216,6 @@ export const onboardingComponents: ComponentEntry[] = [
       onBack: noopHandler,
       onSubmitAuthCode: (code: string) => console.log('[Playground] Auth code:', code),
       onCancelOAuth: noopHandler,
-    }),
-  },
-  {
-    id: 'credentials-step-copilot',
-    name: 'Credentials - Copilot',
-    category: 'Onboarding',
-    description: 'GitHub Copilot OAuth device flow authentication',
-    component: CredentialsStep,
-    props: [
-      {
-        name: 'status',
-        description: 'OAuth status',
-        control: {
-          type: 'select',
-          options: [
-            { label: 'Idle', value: 'idle' },
-            { label: 'Validating', value: 'validating' },
-            { label: 'Success', value: 'success' },
-            { label: 'Error', value: 'error' },
-          ],
-        },
-        defaultValue: 'idle',
-      },
-      {
-        name: 'errorMessage',
-        description: 'Error message to display',
-        control: { type: 'string', placeholder: 'Error message' },
-        defaultValue: '',
-      },
-    ],
-    variants: [
-      { name: 'Initial', props: { apiSetupMethod: 'pi_copilot_oauth', status: 'idle' } },
-      {
-        name: 'Device Code Shown',
-        props: {
-          apiSetupMethod: 'pi_copilot_oauth',
-          status: 'validating',
-          copilotDeviceCode: { userCode: 'ABCD-1234', verificationUri: 'https://github.com/login/device' },
-        },
-      },
-      { name: 'Validating', props: { apiSetupMethod: 'pi_copilot_oauth', status: 'validating' } },
-      { name: 'Success', props: { apiSetupMethod: 'pi_copilot_oauth', status: 'success' } },
-      {
-        name: 'Error',
-        props: {
-          apiSetupMethod: 'pi_copilot_oauth',
-          status: 'error',
-          errorMessage: 'Authorization failed. Please try again.',
-        },
-      },
-    ],
-    mockData: () => ({
-      apiSetupMethod: 'pi_copilot_oauth',
-      onSubmit: noopHandler,
-      onStartOAuth: noopHandler,
-      onBack: noopHandler,
     }),
   },
   {

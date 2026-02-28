@@ -682,9 +682,7 @@ export default function AiSettingsPage() {
     apiSetupOnboarding.reset()
 
     if (connection.authType === 'oauth') {
-      const method = connection.providerType === 'pi'
-                   ? (connection.piAuthProvider === 'github-copilot' ? 'pi_copilot_oauth' : 'pi_chatgpt_oauth')
-                   : 'claude_oauth'
+      const method = connection.providerType === 'pi' ? 'pi_chatgpt_oauth' : 'claude_oauth'
       apiSetupOnboarding.handleStartOAuth(method)
     }
   }, [apiSetupOnboarding, openApiSetup])
@@ -936,13 +934,11 @@ export default function AiSettingsPage() {
                   onSelectProvider={apiSetupOnboarding.handleSelectProvider}
                   onSelectApiSetupMethod={apiSetupOnboarding.handleSelectApiSetupMethod}
                   onSubmitCredential={apiSetupOnboarding.handleSubmitCredential}
-                  onSubmitLocalModel={apiSetupOnboarding.handleSubmitLocalModel}
                   onStartOAuth={apiSetupOnboarding.handleStartOAuth}
                   onFinish={handleApiSetupFinish}
                   isWaitingForCode={apiSetupOnboarding.isWaitingForCode}
                   onSubmitAuthCode={apiSetupOnboarding.handleSubmitAuthCode}
                   onCancelOAuth={apiSetupOnboarding.handleCancelOAuth}
-                  copilotDeviceCode={apiSetupOnboarding.copilotDeviceCode}
                   editInitialValues={editInitialValues}
                   className="h-full"
                 />

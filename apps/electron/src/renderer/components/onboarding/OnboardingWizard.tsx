@@ -3,7 +3,6 @@ import { WelcomeStep } from "./WelcomeStep"
 import type { ApiSetupMethod } from "./APISetupStep"
 import { ProviderSelectStep, type ProviderChoice } from "./ProviderSelectStep"
 import { CredentialsStep, type CredentialStatus } from "./CredentialsStep"
-import { LocalModelStep, type LocalModelSubmitData } from "./LocalModelStep"
 import { CompletionStep } from "./CompletionStep"
 import { GitBashWarning, type GitBashStatus } from "./GitBashWarning"
 import type { ApiKeySubmitData } from "../apisetup"
@@ -12,7 +11,6 @@ export type OnboardingStep =
   | 'welcome'
   | 'git-bash'
   | 'provider-select'
-  | 'local-model'
   | 'credentials'
   | 'complete'
 
@@ -48,9 +46,6 @@ interface OnboardingWizardProps {
   onSubmitAuthCode?: (code: string) => void
   onCancelOAuth?: () => void
 
-  // Copilot device flow
-  copilotDeviceCode?: { userCode: string; verificationUri: string }
-
   // Git Bash (Windows)
   onBrowseGitBash?: () => Promise<string | null>
   onUseGitBashPath?: (path: string) => void
@@ -59,9 +54,6 @@ interface OnboardingWizardProps {
 
   // Provider select (new flow)
   onSelectProvider?: (choice: ProviderChoice) => void
-
-  // Local model
-  onSubmitLocalModel?: (data: LocalModelSubmitData) => void
 
   // Edit mode (pre-fill existing connection values)
   editInitialValues?: {
@@ -79,8 +71,8 @@ interface OnboardingWizardProps {
  *
  * Manages the step-by-step flow for setting up Craft Agent:
  * 1. Welcome
- * 2. Provider Select (Claude / ChatGPT / Copilot / API Key / Local)
- * 3. Credentials (API Key or OAuth) or Local Model
+ * 2. Provider Select (Claude Code / Codex / API Key)
+ * 3. Credentials (API Key or OAuth)
  * 4. Completion
  */
 export function OnboardingWizard({
@@ -95,8 +87,6 @@ export function OnboardingWizard({
   isWaitingForCode,
   onSubmitAuthCode,
   onCancelOAuth,
-  // Copilot device flow
-  copilotDeviceCode,
   // Git Bash (Windows)
   onBrowseGitBash,
   onUseGitBashPath,
@@ -104,8 +94,6 @@ export function OnboardingWizard({
   onClearError,
   // Provider select (new flow)
   onSelectProvider,
-  // Local model
-  onSubmitLocalModel,
   // Edit mode
   editInitialValues,
   className
@@ -142,16 +130,6 @@ export function OnboardingWizard({
           />
         )
 
-      case 'local-model':
-        return (
-          <LocalModelStep
-            onSubmit={onSubmitLocalModel!}
-            onBack={onBack}
-            status={state.credentialStatus === 'validating' ? 'validating' : state.credentialStatus === 'error' ? 'error' : 'idle'}
-            errorMessage={state.errorMessage}
-          />
-        )
-
       case 'credentials':
         return (
           <CredentialsStep
@@ -165,7 +143,6 @@ export function OnboardingWizard({
             onSubmitAuthCode={onSubmitAuthCode}
             editInitialValues={editInitialValues}
             onCancelOAuth={onCancelOAuth}
-            copilotDeviceCode={copilotDeviceCode}
           />
         )
 

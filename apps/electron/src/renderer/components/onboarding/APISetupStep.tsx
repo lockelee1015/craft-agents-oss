@@ -30,14 +30,12 @@ const SEGMENT_DESCRIPTIONS: Record<ProviderSegment, React.ReactNode> = {
  * - 'claude_oauth' → anthropic + oauth
  * - 'anthropic_api_key' → anthropic + api_key
  * - 'pi_chatgpt_oauth' → pi + oauth
- * - 'pi_copilot_oauth' → pi + oauth
  * - 'pi_api_key' → pi + api_key
  */
 export type ApiSetupMethod =
   | 'anthropic_api_key'
   | 'claude_oauth'
   | 'pi_chatgpt_oauth'
-  | 'pi_copilot_oauth'
   | 'pi_api_key'
 
 /**
@@ -53,8 +51,6 @@ export function apiSetupMethodToConnectionTypes(method: ApiSetupMethod): {
     case 'anthropic_api_key':
       return { providerType: 'anthropic', authType: 'api_key' };
     case 'pi_chatgpt_oauth':
-      return { providerType: 'pi', authType: 'oauth' };
-    case 'pi_copilot_oauth':
       return { providerType: 'pi', authType: 'oauth' };
     case 'pi_api_key':
       return { providerType: 'pi', authType: 'api_key' };
@@ -88,13 +84,6 @@ const API_SETUP_OPTIONS: ApiSetupOption[] = [
     id: 'pi_chatgpt_oauth',
     name: 'ChatGPT Plus',
     description: 'Use your ChatGPT subscription with Craft Agents Backend.',
-    icon: <Cpu className="size-4" />,
-    providerType: 'pi',
-  },
-  {
-    id: 'pi_copilot_oauth',
-    name: 'GitHub Copilot',
-    description: 'Use your GitHub Copilot subscription with Craft Agents Backend.',
     icon: <Cpu className="size-4" />,
     providerType: 'pi',
   },
@@ -212,8 +201,7 @@ function ProviderSegmentedControl({
  *
  * Features a segmented control to filter by provider:
  * - Anthropic - Claude Pro/Max or API Key
- * - OpenAI - ChatGPT Plus/Pro or API Key
- * - GitHub Copilot - Copilot subscription
+ * - OpenAI/Codex - ChatGPT Plus/Pro or API Key
  */
 export function APISetupStep({
   selectedMethod,

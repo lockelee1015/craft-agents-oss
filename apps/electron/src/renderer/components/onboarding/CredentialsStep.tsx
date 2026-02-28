@@ -1,14 +1,10 @@
 /**
  * CredentialsStep - Onboarding step wrapper for API key or OAuth flow
- *
- * Thin wrapper that composes ApiKeyInput or OAuthConnect controls
- * with StepFormLayout for the onboarding wizard context.
  */
 
-import { useEffect, useState } from "react"
-import { Check, ExternalLink } from "lucide-react"
 import type { ApiSetupMethod } from "./APISetupStep"
 import { StepFormLayout, BackButton, ContinueButton } from "./primitives"
+import { ExternalLink } from "lucide-react"
 import {
   ApiKeyInput,
   type ApiKeyStatus,
@@ -16,6 +12,7 @@ import {
   OAuthConnect,
   type OAuthStatus,
 } from "../apisetup"
+import { useLocale, t } from "@/i18n"
 
 export type CredentialStatus = ApiKeyStatus | OAuthStatus
 
@@ -26,13 +23,9 @@ interface CredentialsStepProps {
   onSubmit: (data: ApiKeySubmitData) => void
   onStartOAuth?: (methodOverride?: ApiSetupMethod) => void
   onBack: () => void
-  // Two-step OAuth flow
   isWaitingForCode?: boolean
   onSubmitAuthCode?: (code: string) => void
   onCancelOAuth?: () => void
-  // Device flow (Copilot)
-  copilotDeviceCode?: { userCode: string; verificationUri: string }
-  // Edit mode (pre-fill existing connection values)
   editInitialValues?: {
     apiKey?: string
     baseUrl?: string
@@ -51,46 +44,21 @@ export function CredentialsStep({
   isWaitingForCode,
   onSubmitAuthCode,
   onCancelOAuth,
-  copilotDeviceCode,
   editInitialValues,
 }: CredentialsStepProps) {
+  const locale = useLocale()
   const isClaudeOAuth = apiSetupMethod === 'claude_oauth'
   const isChatGptOAuth = apiSetupMethod === 'pi_chatgpt_oauth'
-  const isCopilotOAuth = apiSetupMethod === 'pi_copilot_oauth'
-  const isAnthropicApiKey = apiSetupMethod === 'anthropic_api_key'
   const isPiApiKey = apiSetupMethod === 'pi_api_key'
-  const isApiKey = isAnthropicApiKey || isPiApiKey
 
-  // Copilot device code clipboard handling
-  const [copiedCode, setCopiedCode] = useState(false)
-
-  // Auto-copy device code to clipboard when it appears
-  useEffect(() => {
-    if (copilotDeviceCode?.userCode) {
-      navigator.clipboard.writeText(copilotDeviceCode.userCode).then(() => {
-        setCopiedCode(true)
-        setTimeout(() => setCopiedCode(false), 2000)
-      }).catch(() => {
-        // Clipboard write failed, user can still click to copy
-      })
-    }
-  }, [copilotDeviceCode?.userCode])
-
-  const handleCopyCode = () => {
-    if (copilotDeviceCode?.userCode) {
-      navigator.clipboard.writeText(copilotDeviceCode.userCode).then(() => {
-        setCopiedCode(true)
-        setTimeout(() => setCopiedCode(false), 2000)
-      })
-    }
-  }
-
-  // --- ChatGPT OAuth flow (native browser OAuth) ---
   if (isChatGptOAuth) {
     return (
       <StepFormLayout
-        title="Connect ChatGPT"
-        description="Use your ChatGPT subscription to power Craft Agents."
+        title={t(locale, { en: 'Connect Codex', zh: '连接 Codex' })}
+        description={t(locale, {
+          en: 'Use your ChatGPT subscription to run Codex agents.',
+          zh: '使用 ChatGPT 订阅来运行 Codex Agent。',
+        })}
         actions={
           <>
             <BackButton onClick={onBack} disabled={status === 'validating'} />
@@ -98,115 +66,34 @@ export function CredentialsStep({
               onClick={() => onStartOAuth?.()}
               className="gap-2"
               loading={status === 'validating'}
-              loadingText="Connecting..."
+              loadingText={t(locale, { en: 'Connecting...', zh: '连接中...' })}
             >
               <ExternalLink className="size-4" />
-              Sign in with ChatGPT
+              {t(locale, { en: 'Sign in with ChatGPT', zh: '使用 ChatGPT 登录' })}
             </ContinueButton>
           </>
         }
       >
         <div className="space-y-4">
           <div className="rounded-xl bg-foreground-2 p-4 text-sm text-muted-foreground">
-            <p>Click the button above to sign in with your OpenAI account. A browser window will open for authentication.</p>
+            <p>{t(locale, { en: 'Click the button above to authenticate in your browser.', zh: '点击上方按钮后会在浏览器中完成认证。' })}</p>
           </div>
-          {status === 'error' && errorMessage && (
-            <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">
-              {errorMessage}
-            </div>
-          )}
-          {status === 'success' && (
-            <div className="rounded-lg bg-success/10 text-success text-sm p-3">
-              Connected! Your ChatGPT subscription is ready.
-            </div>
-          )}
+          {status === 'error' && errorMessage && <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3">{errorMessage}</div>}
         </div>
       </StepFormLayout>
     )
   }
 
-  // --- Copilot OAuth flow (device flow) ---
-  if (isCopilotOAuth) {
-    return (
-      <StepFormLayout
-        title="Connect GitHub Copilot"
-        description="Use your GitHub Copilot subscription to power Craft Agents."
-        actions={
-          <>
-            <BackButton onClick={onBack} disabled={status === 'validating'} />
-            <ContinueButton
-              onClick={() => onStartOAuth?.()}
-              className="gap-2"
-              loading={status === 'validating'}
-              loadingText="Waiting for authorization..."
-            >
-              <ExternalLink className="size-4" />
-              Sign in with GitHub
-            </ContinueButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {copilotDeviceCode ? (
-            <div className="rounded-xl bg-foreground-2 p-4 text-sm space-y-3">
-              <p className="text-muted-foreground text-center">
-                Enter this code on GitHub to authorize:
-              </p>
-              <div className="flex flex-col items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="text-2xl font-mono font-bold tracking-widest text-foreground px-4 py-2 rounded-lg bg-background border border-border hover:bg-foreground-2 transition-colors cursor-pointer"
-                >
-                  {copilotDeviceCode.userCode}
-                </button>
-                <span className={`text-xs text-muted-foreground flex items-center gap-1 transition-opacity ${copiedCode ? 'opacity-100' : 'opacity-0'}`}>
-                  <Check className="size-3" />
-                  Copied to clipboard
-                </span>
-              </div>
-              <p className="text-muted-foreground text-xs text-center">
-                A browser window should have opened to github.com/login/device
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-foreground-2 p-4 text-sm text-muted-foreground text-center">
-              <p>Click the button above to sign in with your GitHub account.</p>
-            </div>
-          )}
-          {status === 'error' && errorMessage && (
-            <div className="rounded-lg bg-destructive/10 text-destructive text-sm p-3 text-center">
-              {errorMessage}
-            </div>
-          )}
-          {status === 'success' && (
-            <div className="rounded-lg bg-success/10 text-success text-sm p-3 text-center">
-              Connected! Your GitHub Copilot subscription is ready.
-            </div>
-          )}
-        </div>
-      </StepFormLayout>
-    )
-  }
-
-  // --- Claude OAuth flow ---
   if (isClaudeOAuth) {
-    // Waiting for authorization code entry
     if (isWaitingForCode) {
       return (
         <StepFormLayout
-          title="Enter Authorization Code"
-          description="Copy the code from the browser page and paste it below."
+          title={t(locale, { en: 'Enter Authorization Code', zh: '输入授权码' })}
+          description={t(locale, { en: 'Paste the code from your browser.', zh: '请粘贴浏览器中的授权码。' })}
           actions={
             <>
-              <BackButton onClick={onCancelOAuth} disabled={status === 'validating'}>Cancel</BackButton>
-              <ContinueButton
-                type="submit"
-                form="auth-code-form"
-                disabled={false}
-                loading={status === 'validating'}
-                loadingText="Connecting..."
-              />
+              <BackButton onClick={onCancelOAuth} disabled={status === 'validating'}>{t(locale, { en: 'Cancel', zh: '取消' })}</BackButton>
+              <ContinueButton type="submit" form="auth-code-form" loading={status === 'validating'} loadingText={t(locale, { en: 'Connecting...', zh: '连接中...' })} />
             </>
           }
         >
@@ -224,19 +111,17 @@ export function CredentialsStep({
 
     return (
       <StepFormLayout
-        title="Connect Claude Account"
-        description="Use your Claude subscription to power multi-agent workflows."
+        title={t(locale, { en: 'Connect Claude Code', zh: '连接 Claude Code' })}
+        description={t(locale, {
+          en: 'Use your Claude subscription (API plan) to run Claude Code agents.',
+          zh: '使用你的 Claude 订阅（API 方案）来运行 Claude Code Agent。',
+        })}
         actions={
           <>
             <BackButton onClick={onBack} disabled={status === 'validating'} />
-            <ContinueButton
-              onClick={() => onStartOAuth?.()}
-              className="gap-2"
-              loading={status === 'validating'}
-              loadingText="Connecting..."
-            >
+            <ContinueButton onClick={() => onStartOAuth?.()} className="gap-2" loading={status === 'validating'} loadingText={t(locale, { en: 'Connecting...', zh: '连接中...' })}>
               <ExternalLink className="size-4" />
-              Sign in with Claude
+              {t(locale, { en: 'Sign in with Claude', zh: '使用 Claude 登录' })}
             </ContinueButton>
           </>
         }
@@ -253,27 +138,17 @@ export function CredentialsStep({
     )
   }
 
-  // --- API Key flow ---
-  // Determine provider type and description based on selected method
-  const providerType = isPiApiKey ? 'pi_api_key' : 'anthropic'
-  const apiKeyDescription = isPiApiKey
-    ? "Select your LLM provider and enter the API key. Optionally configure a custom endpoint."
-    : "Enter your API key. Optionally configure a custom endpoint for OpenRouter, Ollama, or compatible APIs."
-
   return (
     <StepFormLayout
-      title="API Configuration"
-      description={apiKeyDescription}
+      title={t(locale, { en: 'API Configuration', zh: 'API 配置' })}
+      description={t(locale, {
+        en: 'Enter your API key for Claude Code or Codex compatible providers.',
+        zh: '请输入用于 Claude Code 或兼容 Codex 提供方的 API Key。',
+      })}
       actions={
         <>
           <BackButton onClick={onBack} disabled={status === 'validating'} />
-          <ContinueButton
-            type="submit"
-            form="api-key-form"
-            disabled={false}
-            loading={status === 'validating'}
-            loadingText="Validating..."
-          />
+          <ContinueButton type="submit" form="api-key-form" loading={status === 'validating'} loadingText={t(locale, { en: 'Validating...', zh: '校验中...' })} />
         </>
       }
     >
@@ -281,7 +156,7 @@ export function CredentialsStep({
         status={status as ApiKeyStatus}
         errorMessage={errorMessage}
         onSubmit={onSubmit}
-        providerType={providerType}
+        providerType={isPiApiKey ? 'pi_api_key' : 'anthropic'}
         initialValues={editInitialValues}
       />
     </StepFormLayout>
