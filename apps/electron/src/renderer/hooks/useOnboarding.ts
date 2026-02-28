@@ -15,7 +15,8 @@ import type {
   OnboardingStep,
   ApiSetupMethod,
 } from '@/components/onboarding'
-import type { ProviderChoice } from '@/components/onboarding/ProviderSelectStep'
+import type { ProviderChoice } from '@/lib/onboarding-routing'
+import { resolveApiSetupMethodForProvider, shouldAutoStartOAuth } from '@/lib/onboarding-routing'
 import type { ApiKeySubmitData } from '@/components/apisetup'
 import type { SetupNeeds, LlmConnectionSetup } from '../../shared/types'
 
@@ -523,13 +524,7 @@ export function useOnboarding({
   const handleSelectProvider = useCallback((choice: ProviderChoice) => {
     // "I have an API key" should default to Claude Code backend (Anthropic-compatible),
     // so users can use custom endpoints/providers without requiring the Pi subprocess.
-    const CHOICE_TO_METHOD: Record<ProviderChoice, ApiSetupMethod> = {
-      claude: 'claude_oauth',
-      chatgpt: 'pi_chatgpt_oauth',
-      api_key: 'anthropic_api_key',
-    }
-
-    const method = CHOICE_TO_METHOD[choice]
+    const method = resolveApiSetupMethodForProvider(choice) as ApiSetupMethod
     setState(s => ({
       ...s,
       apiSetupMethod: method,
@@ -539,7 +534,7 @@ export function useOnboarding({
     }))
 
     // OAuth methods start immediately
-    if (choice === 'claude' || choice === 'chatgpt') {
+    if (shouldAutoStartOAuth(choice)) {
       // Defer to next tick so state is updated before handleStartOAuth reads it
       setTimeout(() => handleStartOAuth(method), 0)
     }

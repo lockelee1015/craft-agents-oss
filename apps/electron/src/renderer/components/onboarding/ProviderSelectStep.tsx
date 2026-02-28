@@ -3,6 +3,7 @@ import { Key } from "lucide-react"
 import { CraftAgentsSymbol } from "@/components/icons/CraftAgentsSymbol"
 import { StepFormLayout } from "./primitives"
 import { useLocale, t } from "@/i18n"
+import type { ProviderChoice } from "@/lib/onboarding-routing"
 
 import claudeIcon from "@/assets/provider-icons/claude.svg"
 import openaiIcon from "@/assets/provider-icons/openai.svg"
@@ -11,7 +12,7 @@ import openaiIcon from "@/assets/provider-icons/openai.svg"
  * The high-level provider choice the user makes on first launch.
  * This maps to one or more ApiSetupMethods downstream.
  */
-export type ProviderChoice = 'claude' | 'chatgpt' | 'api_key'
+export type { ProviderChoice } from '@/lib/onboarding-routing'
 
 interface ProviderOption {
   id: ProviderChoice
