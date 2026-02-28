@@ -48,9 +48,6 @@ interface OnboardingWizardProps {
   onSubmitAuthCode?: (code: string) => void
   onCancelOAuth?: () => void
 
-  // Copilot device flow
-  copilotDeviceCode?: { userCode: string; verificationUri: string }
-
   // Git Bash (Windows)
   onBrowseGitBash?: () => Promise<string | null>
   onUseGitBashPath?: (path: string) => void
@@ -79,7 +76,7 @@ interface OnboardingWizardProps {
  *
  * Manages the step-by-step flow for setting up Craft Agent:
  * 1. Welcome
- * 2. Provider Select (Claude / ChatGPT / Copilot / API Key / Local)
+ * 2. Provider Select (Claude Code / Codex / API Key)
  * 3. Credentials (API Key or OAuth) or Local Model
  * 4. Completion
  */
@@ -95,8 +92,6 @@ export function OnboardingWizard({
   isWaitingForCode,
   onSubmitAuthCode,
   onCancelOAuth,
-  // Copilot device flow
-  copilotDeviceCode,
   // Git Bash (Windows)
   onBrowseGitBash,
   onUseGitBashPath,
@@ -165,7 +160,6 @@ export function OnboardingWizard({
             onSubmitAuthCode={onSubmitAuthCode}
             editInitialValues={editInitialValues}
             onCancelOAuth={onCancelOAuth}
-            copilotDeviceCode={copilotDeviceCode}
           />
         )
 

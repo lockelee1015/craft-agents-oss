@@ -256,7 +256,6 @@ export const onboardingComponents: ComponentEntry[] = [
         props: {
           apiSetupMethod: 'pi_copilot_oauth',
           status: 'validating',
-          copilotDeviceCode: { userCode: 'ABCD-1234', verificationUri: 'https://github.com/login/device' },
         },
       },
       { name: 'Validating', props: { apiSetupMethod: 'pi_copilot_oauth', status: 'validating' } },

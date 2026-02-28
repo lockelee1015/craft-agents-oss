@@ -66,8 +66,6 @@ interface UseOnboardingReturn {
   handleSubmitAuthCode: (code: string) => void
   handleCancelOAuth: () => void
 
-  // Copilot device code (displayed during device flow)
-  copilotDeviceCode?: { userCode: string; verificationUri: string }
 
   // Git Bash (Windows)
   handleBrowseGitBash: () => Promise<string | null>
@@ -457,9 +455,6 @@ export function useOnboarding({
   // Two-step OAuth flow state
   const [isWaitingForCode, setIsWaitingForCode] = useState(false)
 
-  // Copilot device code (displayed during device flow)
-  const [copilotDeviceCode, setCopilotDeviceCode] = useState<{ userCode: string; verificationUri: string } | undefined>()
-
   // Start OAuth flow (Claude or ChatGPT depending on selected method)
   const handleStartOAuth = useCallback(async (methodOverride?: ApiSetupMethod) => {
     const effectiveMethod = methodOverride ?? state.apiSetupMethod
@@ -499,34 +494,6 @@ export function useOnboarding({
             credentialStatus: 'error',
             errorMessage: result.error || 'ChatGPT authentication failed',
           }))
-        }
-        return
-      }
-
-      // Copilot OAuth (device flow — polls for token after user enters code on GitHub)
-      if (effectiveMethod === 'pi_copilot_oauth') {
-        const connectionSlug = apiSetupMethodToConnectionSetup(effectiveMethod, {}, editingSlug, existingSlugs).slug
-
-        // Subscribe to device code event before starting the flow
-        const cleanup = window.electronAPI.onCopilotDeviceCode((data) => {
-          setCopilotDeviceCode(data)
-        })
-
-        try {
-          const result = await window.electronAPI.startCopilotOAuth(connectionSlug)
-
-          if (result.success) {
-            await saveAndValidateConnection(connectionSlug, effectiveMethod)
-          } else {
-            setState(s => ({
-              ...s,
-              credentialStatus: 'error',
-              errorMessage: result.error || 'GitHub authentication failed',
-            }))
-          }
-        } finally {
-          cleanup()
-          setCopilotDeviceCode(undefined)
         }
         return
       }
@@ -571,14 +538,7 @@ export function useOnboarding({
     const CHOICE_TO_METHOD: Record<Exclude<ProviderChoice, 'local'>, ApiSetupMethod> = {
       claude: 'claude_oauth',
       chatgpt: 'pi_chatgpt_oauth',
-      copilot: 'pi_copilot_oauth',
       api_key: 'anthropic_api_key',
-    }
-
-    if (choice === 'local') {
-      // Local uses anthropic_api_key with custom endpoint (Ollama doesn't need an API key)
-      setState(s => ({ ...s, step: 'local-model', apiSetupMethod: 'anthropic_api_key', credentialStatus: 'idle', errorMessage: undefined }))
-      return
     }
 
     const method = CHOICE_TO_METHOD[choice]
@@ -591,7 +551,7 @@ export function useOnboarding({
     }))
 
     // OAuth methods start immediately
-    if (choice === 'claude' || choice === 'chatgpt' || choice === 'copilot') {
+    if (choice === 'claude' || choice === 'chatgpt') {
       // Defer to next tick so state is updated before handleStartOAuth reads it
       setTimeout(() => handleStartOAuth(method), 0)
     }
@@ -762,8 +722,6 @@ export function useOnboarding({
     isWaitingForCode,
     handleSubmitAuthCode,
     handleCancelOAuth,
-    // Copilot device code
-    copilotDeviceCode,
     // Git Bash (Windows)
     handleBrowseGitBash,
     handleUseGitBashPath,
