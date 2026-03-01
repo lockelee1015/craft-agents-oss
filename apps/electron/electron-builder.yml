@@ -1,5 +1,6 @@
 appId: com.lockelee1015.mooncake
 productName: MoonCake
+copyright: "Copyright © ${year} lockelee1015"
 
 electronVersion: "39.2.7"
 
@@ -99,7 +100,7 @@ mac:
 dmg:
   # Include version in DMG filename: MoonCake-0.0.4-arm64.dmg
   artifactName: "MoonCake-${version}-${arch}.dmg"
-  # Custom background (multi-resolution TIFF with 1x+2x for retina support)
+  # Custom background (multi-resolution TIFF with 1x+2x retina representations)
   background: resources/dmg-background.tiff
   # Use app icon as the mounted volume icon in Finder
   icon: resources/icon.icns
@@ -113,6 +114,8 @@ dmg:
       type: link
       path: /Applications
   window:
+    x: 120
+    y: 120
     width: 540
     height: 380
 
@@ -165,7 +168,7 @@ nsis:
 linux:
   icon: resources/icon.png
   category: Utility
-  maintainer: "Craft Docs Ltd. <support@craft.do>"
+  maintainer: "lockelee1015 <lockelee1015@users.noreply.github.com>"
   target:
     - target: AppImage
       arch:
