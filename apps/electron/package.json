@@ -1,6 +1,6 @@
 {
   "name": "@craft-agent/electron",
-  "version": "0.5.1",
+  "version": "0.0.1",
   "description": "Electron desktop app for MoonCake",
   "main": "dist/main.cjs",
   "private": true,
