@@ -353,6 +353,18 @@ export type SessionStatus = string
 // Helper type for TypeScript consumers
 export type BuiltInStatusId = 'todo' | 'in-progress' | 'needs-review' | 'done' | 'cancelled'
 
+export type ArtifactKind = 'deliverable' | 'attachment'
+
+export interface ArtifactSummary {
+  path: string
+  name: string
+  title: string
+  kind: ArtifactKind
+  size: number
+  updatedAt: number
+  exists: boolean
+}
+
 export interface Session {
   id: string
   workspaceId: string
@@ -426,6 +438,8 @@ export interface Session {
     /** Model's context window size in tokens (from SDK modelUsage) */
     contextWindow?: number
   }
+  /** Session-level artifact summaries reported by the agent via report_artifact */
+  artifacts?: ArtifactSummary[]
   /** When true, session is hidden from session list (e.g., mini edit sessions) */
   hidden?: boolean
   /** Whether this session is archived */
@@ -482,7 +496,7 @@ export type SessionEvent =
   | { type: 'tool_result'; sessionId: string; toolUseId: string; toolName: string; result: string; turnId?: string; parentToolUseId?: string; isError?: boolean; timestamp?: number }
   | { type: 'error'; sessionId: string; error: string; timestamp?: number }
   | { type: 'typed_error'; sessionId: string; error: TypedError; timestamp?: number }
-  | { type: 'complete'; sessionId: string; tokenUsage?: Session['tokenUsage']; hasUnread?: boolean }
+  | { type: 'complete'; sessionId: string; tokenUsage?: Session['tokenUsage']; hasUnread?: boolean; artifacts?: ArtifactSummary[] }
   | { type: 'interrupted'; sessionId: string; message?: Message; queuedMessages?: string[] }
   | { type: 'status'; sessionId: string; message: string; statusType?: 'compacting' }
   | { type: 'info'; sessionId: string; message: string; statusType?: 'compaction_complete'; level?: 'info' | 'warning' | 'error' | 'success'; timestamp?: number }

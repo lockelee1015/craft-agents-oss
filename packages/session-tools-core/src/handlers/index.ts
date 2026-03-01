@@ -54,3 +54,7 @@ export type { TransformDataArgs } from './transform-data.ts';
 // Render Template
 export { handleRenderTemplate } from './render-template.ts';
 export type { RenderTemplateArgs } from './render-template.ts';
+
+// Artifact Reporting
+export { handleReportArtifact } from './report-artifact.ts';
+export type { ReportArtifactArgs } from './report-artifact.ts';

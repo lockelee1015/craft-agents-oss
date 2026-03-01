@@ -1743,6 +1743,7 @@ export function shouldAllowToolInMode(
         'mcp__session__transform_data',
         'mcp__session__render_template',
         'mcp__session__call_llm',
+        'mcp__session__report_artifact',
       ];
       if (readOnlySessionTools.includes(toolName)) {
         return { allowed: true };

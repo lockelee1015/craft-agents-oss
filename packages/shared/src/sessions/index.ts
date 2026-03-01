@@ -120,4 +120,20 @@ export {
   sanitizeSessionId,
 } from './validation.ts';
 
+// Artifact tracking (session deliverables)
+export type {
+  ArtifactKind,
+  ArtifactRecord,
+  ArtifactStore,
+  UpsertArtifactInput,
+  UpsertArtifactContext,
+  ArtifactSummary,
+} from './artifacts.ts';
+
+export {
+  ARTIFACTS_FILE_NAME,
+  readArtifacts,
+  upsertArtifact,
+  getArtifactSummaries,
+} from './artifacts.ts';
 

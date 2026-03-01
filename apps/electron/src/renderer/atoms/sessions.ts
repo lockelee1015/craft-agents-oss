@@ -497,8 +497,9 @@ export const ensureSessionMessagesLoadedAtom = atom(
       // Merge messages and disk-only fields into existing session, preserving in-memory UI state.
       // The renderer's atom is authoritative for UI fields (hasUnread, isFlagged, etc.)
       // because optimistic updates may have changed them since the disk write.
-      // tokenUsage and sessionFolderPath are only returned by getSession() (not getSessions()),
-      // so they must be explicitly merged here to be available after app restart.
+      // tokenUsage, sessionFolderPath, and artifacts are only returned by getSession()
+      // (not getSessions()), so they must be explicitly merged here to be available
+      // after app restart/refresh.
       const existingSession = get(sessionAtomFamily(sessionId))
       const mergedSession = existingSession
         ? {
@@ -515,6 +516,7 @@ export const ensureSessionMessagesLoadedAtom = atom(
               : loadedSession.messages,
             tokenUsage: loadedSession.tokenUsage ?? existingSession.tokenUsage,
             sessionFolderPath: loadedSession.sessionFolderPath ?? existingSession.sessionFolderPath,
+            artifacts: loadedSession.artifacts ?? existingSession.artifacts,
           }
         : loadedSession
       set(sessionAtomFamily(sessionId), mergedSession)

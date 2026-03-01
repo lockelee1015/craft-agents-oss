@@ -454,3 +454,37 @@ describe('persistence pipeline filtering', () => {
     expect(final.find(m => m.type === 'assistant')?.id).toBe('msg-final')
   })
 })
+
+// ============================================================================
+// 1d. Artifact Tool Message Regression
+// ============================================================================
+
+describe('report_artifact tool message round-trip', () => {
+  it('preserves report_artifact tool payload fields', () => {
+    const original: Message = {
+      id: 'msg-artifact-tool',
+      role: 'tool',
+      content: 'Recorded artifact: Final Deck (/tmp/final.pptx)',
+      timestamp: 1700000000000,
+      toolName: 'report_artifact',
+      toolUseId: 'tu-artifact-1',
+      toolStatus: 'completed',
+      toolInput: {
+        path: '/tmp/final.pptx',
+        title: 'Final Deck',
+        kind: 'deliverable',
+      },
+      toolResult: 'ok',
+      turnId: 'turn-artifact-1',
+    }
+
+    const stored = messageToStored(original)
+    const restored = storedToMessage(stored)
+
+    expect(restored.toolName).toBe('report_artifact')
+    expect(restored.toolUseId).toBe('tu-artifact-1')
+    expect(restored.toolStatus).toBe('completed')
+    expect(restored.toolInput).toEqual(original.toolInput)
+    expect(restored.turnId).toBe('turn-artifact-1')
+  })
+})

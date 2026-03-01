@@ -459,3 +459,47 @@ describe('auth-request Message field completeness', () => {
     }
   })
 })
+
+// ============================================================================
+// Tests: complete event payload parity
+// ============================================================================
+
+describe('complete event payload parity', () => {
+  it('main and renderer use the same complete payload fields', () => {
+    const artifacts = [
+      {
+        path: '/tmp/final.pptx',
+        name: 'final.pptx',
+        title: 'Final Deck',
+        kind: 'deliverable' as const,
+        size: 1024,
+        updatedAt: 1700000000000,
+        exists: true,
+      },
+    ]
+
+    const mainCompleteEvent = {
+      type: 'complete' as const,
+      sessionId: 'session-1',
+      tokenUsage: {
+        inputTokens: 120,
+        outputTokens: 80,
+        totalTokens: 200,
+        contextTokens: 120,
+        costUsd: 0.01,
+      },
+      hasUnread: true,
+      artifacts,
+    }
+
+    const rendererCompleteEvent = {
+      type: 'complete' as const,
+      sessionId: 'session-1',
+      tokenUsage: mainCompleteEvent.tokenUsage,
+      hasUnread: true,
+      artifacts,
+    }
+
+    expect(rendererCompleteEvent).toEqual(mainCompleteEvent)
+  })
+})

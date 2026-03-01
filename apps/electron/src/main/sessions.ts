@@ -46,6 +46,7 @@ import {
   getPendingPlanExecution as getStoredPendingPlanExecution,
   getSessionAttachmentsPath,
   getSessionPath as getSessionStoragePath,
+  getArtifactSummaries,
   sessionPersistenceQueue,
   // Sub-session functions
   createSubSession as createStoredSubSession,
@@ -1745,6 +1746,7 @@ export class SessionManager {
       preview: m.preview,  // Include preview for title fallback consistency with getSessions()
       lastMessageRole: m.lastMessageRole,
       tokenUsage: m.tokenUsage,
+      artifacts: this.getSessionArtifactSummaries(m),
       lastFinalMessageId: m.lastFinalMessageId,
       // Runtime-only fields
       workspaceId: m.workspace.id,
@@ -2418,8 +2420,8 @@ export class SessionManager {
             managed.agent.forceAbort(AbortReason.PlanSubmitted)
             managed.isProcessing = false
 
-            // Send complete event so renderer knows processing stopped (include tokenUsage for real-time updates)
-            this.sendEvent({ type: 'complete', sessionId: managed.id, tokenUsage: managed.tokenUsage }, managed.workspace.id)
+            // Send complete event so renderer knows processing stopped (include tokenUsage + artifacts)
+            this.emitCompleteEvent(managed)
 
             // Persist session state
             this.persistSession(managed)
@@ -2470,8 +2472,8 @@ export class SessionManager {
           managed.agent.forceAbort(AbortReason.AuthRequest)
           managed.isProcessing = false
 
-          // Send complete event so renderer knows processing stopped (include tokenUsage for real-time updates)
-          this.sendEvent({ type: 'complete', sessionId: managed.id, tokenUsage: managed.tokenUsage }, managed.workspace.id)
+          // Send complete event so renderer knows processing stopped (include tokenUsage + artifacts)
+          this.emitCompleteEvent(managed)
         }
 
         // Emit auth_request event to renderer
@@ -3060,6 +3062,32 @@ export class SessionManager {
       }
     }
     return undefined
+  }
+
+  /**
+   * Load artifact summaries for a managed session.
+   */
+  private getSessionArtifactSummaries(managed: ManagedSession): Session['artifacts'] {
+    try {
+      const sessionPath = getSessionStoragePath(managed.workspace.rootPath, managed.id)
+      return getArtifactSummaries(sessionPath)
+    } catch (error) {
+      sessionLog.warn(`Failed to read artifacts for session ${managed.id}:`, error)
+      return []
+    }
+  }
+
+  /**
+   * Emit the canonical complete event payload (token usage + unread + artifacts).
+   */
+  private emitCompleteEvent(managed: ManagedSession, options?: { hasUnread?: boolean }): void {
+    this.sendEvent({
+      type: 'complete',
+      sessionId: managed.id,
+      tokenUsage: managed.tokenUsage,
+      ...(options?.hasUnread !== undefined ? { hasUnread: options.hasUnread } : {}),
+      artifacts: this.getSessionArtifactSummaries(managed),
+    }, managed.workspace.id)
   }
 
   /**
@@ -4040,13 +4068,10 @@ export class SessionManager {
       // Has queued messages - process next
       this.processNextQueuedMessage(sessionId)
     } else {
-      // No queue - emit complete to UI (include tokenUsage and hasUnread for state updates)
-      this.sendEvent({
-        type: 'complete',
-        sessionId,
-        tokenUsage: managed.tokenUsage,
+      // No queue - emit complete to UI (token usage + unread + artifacts)
+      this.emitCompleteEvent(managed, {
         hasUnread: managed.hasUnread,  // Propagate unread state to renderer
-      }, managed.workspace.id)
+      })
     }
 
     // 5. Always persist

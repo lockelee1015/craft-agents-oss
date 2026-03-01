@@ -32,6 +32,7 @@ import { handleCredentialPrompt } from './handlers/credential-prompt.ts';
 import { handleUpdatePreferences } from './handlers/update-preferences.ts';
 import { handleTransformData } from './handlers/transform-data.ts';
 import { handleRenderTemplate } from './handlers/render-template.ts';
+import { handleReportArtifact } from './handlers/report-artifact.ts';
 
 // ============================================================
 // Canonical Zod Schemas
@@ -124,6 +125,13 @@ export const RenderTemplateSchema = z.object({
   source: z.string().describe('Source slug (e.g., "linear", "gmail")'),
   template: z.string().describe('Template ID (e.g., "issue-detail", "issue-list")'),
   data: z.record(z.string(), z.unknown()).describe('JSON data to render into the template'),
+});
+
+export const ReportArtifactSchema = z.object({
+  path: z.string().describe('Absolute file path, or relative path from current working directory/session root'),
+  title: z.string().optional().describe('Optional display title. Defaults to file name'),
+  kind: z.enum(['deliverable', 'attachment']).optional().describe('Artifact category. Defaults to "deliverable"'),
+  note: z.string().optional().describe('Optional short note about this artifact'),
 });
 
 export const SpawnSessionSchema = z.object({
@@ -279,6 +287,13 @@ Use this when a source provides HTML templates for rich rendering of its data (e
 
 Templates use Mustache syntax — the tool handles rendering and writes the output HTML to the session data folder.`,
 
+  report_artifact: `Record a user-facing artifact (deliverable file) for the current session.
+
+Call this immediately after generating a final file the user should consume (e.g., .pptx, .pdf, .xlsx, .docx, final report markdown).
+
+Do NOT report intermediate implementation files such as scripts, temp files, logs, plans, or helper code.
+Example: when creating a presentation, report the generated .pptx file, not the .js/.py script used to build it.`,
+
   call_llm: `Invoke a secondary LLM for focused subtasks. Use for:
 - Cost optimization: use a smaller model for simple tasks (summarization, classification)
 - Structured output: JSON schema compliance via prompt instructions
@@ -334,6 +349,7 @@ export const SESSION_TOOL_DEFS: SessionToolDef[] = [
   { name: 'update_user_preferences', description: TOOL_DESCRIPTIONS.update_user_preferences, inputSchema: UpdatePreferencesSchema, handler: handleUpdatePreferences },
   { name: 'transform_data', description: TOOL_DESCRIPTIONS.transform_data, inputSchema: TransformDataSchema, handler: handleTransformData },
   { name: 'render_template', description: TOOL_DESCRIPTIONS.render_template, inputSchema: RenderTemplateSchema, handler: handleRenderTemplate },
+  { name: 'report_artifact', description: TOOL_DESCRIPTIONS.report_artifact, inputSchema: ReportArtifactSchema, handler: handleReportArtifact },
   { name: 'call_llm', description: TOOL_DESCRIPTIONS.call_llm, inputSchema: CallLlmSchema, handler: null },
   { name: 'spawn_session', description: TOOL_DESCRIPTIONS.spawn_session, inputSchema: SpawnSessionSchema, handler: null },
 ];

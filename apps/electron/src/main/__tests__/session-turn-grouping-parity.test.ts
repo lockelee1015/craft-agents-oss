@@ -240,6 +240,35 @@ describe('turn grouping stability across reload', () => {
     expect(bgTool?.toolStatus).toBe('backgrounded')
   })
 
+  it('report_artifact tool remains grouped with assistant response after reload', () => {
+    const turnId = 'turn-artifact'
+    const messages: Message[] = [
+      createMessage('user', { content: 'Generate a PPT and share it' }),
+      createMessage('tool', {
+        toolName: 'report_artifact',
+        toolUseId: 'tu-artifact-1',
+        toolStatus: 'completed',
+        toolInput: {
+          path: '/tmp/final.pptx',
+          title: 'Final Deck',
+          kind: 'deliverable',
+        },
+        toolResult: 'Recorded artifact',
+        turnId,
+      }),
+      createMessage('assistant', { content: 'Done. I generated the PPT.', turnId }),
+    ]
+
+    const reloaded = simulatePersistAndReload(messages)
+    const grouped = groupMessagesByTurn(reloaded)
+    const assistantTurns = getAssistantTurns(grouped)
+    const lastAssistant = assistantTurns[assistantTurns.length - 1]
+
+    expect(lastAssistant).toBeDefined()
+    expect(lastAssistant?.response?.text).toBe('Done. I generated the PPT.')
+    expect(lastAssistant?.activities.some(a => a.toolName === 'report_artifact')).toBe(true)
+  })
+
   it('nested subagent tools: parentToolUseId survives and groups correctly', () => {
     const turnId = 'turn-4'
     const messages: Message[] = [

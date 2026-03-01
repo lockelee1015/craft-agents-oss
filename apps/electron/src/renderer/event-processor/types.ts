@@ -93,6 +93,8 @@ export interface CompleteEvent {
   tokenUsage?: Session['tokenUsage']
   /** Explicit unread flag - set by main process based on viewing state */
   hasUnread?: boolean
+  /** Session-level artifact summaries */
+  artifacts?: Session['artifacts']
 }
 
 /**

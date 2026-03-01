@@ -45,6 +45,7 @@ import type { ThinkingLevel } from "@craft-agent/shared/agent/thinking-levels"
 import { TurnCard, UserMessageBubble, groupMessagesByTurn, formatTurnAsMarkdown, formatActivityAsMarkdown, type Turn, type AssistantTurn, type UserTurn, type SystemTurn, type AuthRequestTurn } from "@craft-agent/ui"
 import { MemoizedAuthRequestCard } from "@/components/chat/AuthRequestCard"
 import { ActiveOptionBadges } from "./ActiveOptionBadges"
+import { ArtifactSummaryCard, shouldRenderArtifactSummaryCard } from "./ArtifactSummaryCard"
 import { InputContainer, type StructuredInputState, type StructuredResponse, type PermissionResponse } from "./input"
 import type { RichTextInputHandle } from "@/components/ui/rich-text-input"
 import { useBackgroundTasks } from "@/hooks/useBackgroundTasks"
@@ -1391,112 +1392,119 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
 
                     // Assistant turns - render with TurnCard (buffered streaming)
                     return (
-                      <div
-                        key={turnKey}
-                        ref={el => { if (el) turnRefs.current.set(turnKey, el); else turnRefs.current.delete(turnKey) }}
-                        className={cn(
-                          "pt-2",
-                          "rounded-lg transition-all duration-200",
-                          isCurrentMatch && "ring-2 ring-info ring-offset-2 ring-offset-background",
-                          isAnyMatch && !isCurrentMatch && "ring-1 ring-info/30"
-                        )}
-                      >
-                      <TurnCard
-                        sessionId={session.id}
-                        sessionFolderPath={session.sessionFolderPath}
-                        turnId={turn.turnId}
-                        activities={turn.activities}
-                        response={turn.response}
-                        intent={turn.intent}
-                        isStreaming={turn.isStreaming}
-                        isComplete={turn.isComplete}
-                        isExpanded={expandedTurns.has(turn.turnId)}
-                        onExpandedChange={(expanded) => toggleTurn(turn.turnId, expanded)}
-                        expandedActivityGroups={expandedActivityGroups}
-                        onExpandedActivityGroupsChange={setExpandedActivityGroups}
-                        todos={turn.todos}
-                        onOpenFile={onOpenFile}
-                        onOpenUrl={onOpenUrl}
-                        isLastResponse={isLastResponse}
-                        compactMode={compactMode}
-                        onAcceptPlan={() => {
-                          window.dispatchEvent(new CustomEvent('craft:approve-plan', {
-                            detail: { text: 'Plan approved, please execute.', sessionId: session?.id }
-                          }))
-                        }}
-                        onAcceptPlanWithCompact={() => {
-                          // Find the most recent plan message to get its path
-                          // After compaction, Claude needs to know which plan file to read
-                          const planMessage = session?.messages.findLast(m => m.role === 'plan')
-                          const planPath = planMessage?.planPath
+                      <React.Fragment key={turnKey}>
+                        <div
+                          ref={el => { if (el) turnRefs.current.set(turnKey, el); else turnRefs.current.delete(turnKey) }}
+                          className={cn(
+                            "pt-2",
+                            "rounded-lg transition-all duration-200",
+                            isCurrentMatch && "ring-2 ring-info ring-offset-2 ring-offset-background",
+                            isAnyMatch && !isCurrentMatch && "ring-1 ring-info/30"
+                          )}
+                        >
+                          <TurnCard
+                            sessionId={session.id}
+                            sessionFolderPath={session.sessionFolderPath}
+                            turnId={turn.turnId}
+                            activities={turn.activities}
+                            response={turn.response}
+                            intent={turn.intent}
+                            isStreaming={turn.isStreaming}
+                            isComplete={turn.isComplete}
+                            isExpanded={expandedTurns.has(turn.turnId)}
+                            onExpandedChange={(expanded) => toggleTurn(turn.turnId, expanded)}
+                            expandedActivityGroups={expandedActivityGroups}
+                            onExpandedActivityGroupsChange={setExpandedActivityGroups}
+                            todos={turn.todos}
+                            onOpenFile={onOpenFile}
+                            onOpenUrl={onOpenUrl}
+                            isLastResponse={isLastResponse}
+                            compactMode={compactMode}
+                            onAcceptPlan={() => {
+                              window.dispatchEvent(new CustomEvent('craft:approve-plan', {
+                                detail: { text: 'Plan approved, please execute.', sessionId: session?.id }
+                              }))
+                            }}
+                            onAcceptPlanWithCompact={() => {
+                              // Find the most recent plan message to get its path
+                              // After compaction, Claude needs to know which plan file to read
+                              const planMessage = session?.messages.findLast(m => m.role === 'plan')
+                              const planPath = planMessage?.planPath
 
-                          // Dispatch event to compact conversation first, then execute plan
-                          // FreeFormInput handles this by sending /compact, waiting for completion,
-                          // then sending a message with the plan path for Claude to read and execute
-                          window.dispatchEvent(new CustomEvent('craft:approve-plan-with-compact', {
-                            detail: { sessionId: session?.id, planPath }
-                          }))
-                        }}
-                        onPopOut={(text) => {
-                          // Open raw markdown source in code viewer
-                          setOverlayState({
-                            type: 'markdown',
-                            content: text,
-                            title: 'Response Preview',
-                            forceCodeView: true,
-                          })
-                        }}
-                        onOpenDetails={() => {
-                          // Open turn details in markdown overlay
-                          const markdown = formatTurnAsMarkdown(turn)
-                          setOverlayState({
-                            type: 'markdown',
-                            content: markdown,
-                            title: 'Turn Details',
-                          })
-                        }}
-                        onOpenActivityDetails={(activity) => {
-                          // Write tool for .md/.txt → Document overlay (rendered markdown)
-                          // rather than multi-diff, since these are better viewed as formatted documents
-                          const isDocumentWrite = activity.toolName === 'Write' && (() => {
-                            const actInput = activity.toolInput as Record<string, unknown> | undefined
-                            const fp = (actInput?.file_path as string) || ''
-                            const ext = fp.split('.').pop()?.toLowerCase()
-                            return ext === 'md' || ext === 'txt'
-                          })()
-
-                          // Edit/Write tool → Multi-file diff overlay (ungrouped, focused on this change)
-                          // Exception: Write to .md/.txt files goes to document overlay instead
-                          if ((activity.toolName === 'Edit' || activity.toolName === 'Write') && !isDocumentWrite) {
-                            const changes = collectFileChanges(turn.activities)
-                            if (changes.length > 0) {
+                              // Dispatch event to compact conversation first, then execute plan
+                              // FreeFormInput handles this by sending /compact, waiting for completion,
+                              // then sending a message with the plan path for Claude to read and execute
+                              window.dispatchEvent(new CustomEvent('craft:approve-plan-with-compact', {
+                                detail: { sessionId: session?.id, planPath }
+                              }))
+                            }}
+                            onPopOut={(text) => {
+                              // Open raw markdown source in code viewer
                               setOverlayState({
-                                type: 'multi-diff',
-                                changes,
-                                consolidated: false, // Ungrouped mode - show individual changes
-                                focusedChangeId: activity.id, // Focus on clicked activity
+                                type: 'markdown',
+                                content: text,
+                                title: 'Response Preview',
+                                forceCodeView: true,
                               })
-                            }
-                          } else {
-                            // All other tools → Use extractOverlayData for appropriate overlay
-                            setOverlayState({ type: 'activity', activity })
-                          }
-                        }}
-                        hasEditOrWriteActivities={turn.activities.some(a =>
-                          a.toolName === 'Edit' || a.toolName === 'Write'
+                            }}
+                            onOpenDetails={() => {
+                              // Open turn details in markdown overlay
+                              const markdown = formatTurnAsMarkdown(turn)
+                              setOverlayState({
+                                type: 'markdown',
+                                content: markdown,
+                                title: 'Turn Details',
+                              })
+                            }}
+                            onOpenActivityDetails={(activity) => {
+                              // Write tool for .md/.txt → Document overlay (rendered markdown)
+                              // rather than multi-diff, since these are better viewed as formatted documents
+                              const isDocumentWrite = activity.toolName === 'Write' && (() => {
+                                const actInput = activity.toolInput as Record<string, unknown> | undefined
+                                const fp = (actInput?.file_path as string) || ''
+                                const ext = fp.split('.').pop()?.toLowerCase()
+                                return ext === 'md' || ext === 'txt'
+                              })()
+
+                              // Edit/Write tool → Multi-file diff overlay (ungrouped, focused on this change)
+                              // Exception: Write to .md/.txt files goes to document overlay instead
+                              if ((activity.toolName === 'Edit' || activity.toolName === 'Write') && !isDocumentWrite) {
+                                const changes = collectFileChanges(turn.activities)
+                                if (changes.length > 0) {
+                                  setOverlayState({
+                                    type: 'multi-diff',
+                                    changes,
+                                    consolidated: false, // Ungrouped mode - show individual changes
+                                    focusedChangeId: activity.id, // Focus on clicked activity
+                                  })
+                                }
+                              } else {
+                                // All other tools → Use extractOverlayData for appropriate overlay
+                                setOverlayState({ type: 'activity', activity })
+                              }
+                            }}
+                            hasEditOrWriteActivities={turn.activities.some(a =>
+                              a.toolName === 'Edit' || a.toolName === 'Write'
+                            )}
+                            onOpenMultiFileDiff={() => {
+                              const changes = collectFileChanges(turn.activities)
+                              if (changes.length > 0) {
+                                setOverlayState({
+                                  type: 'multi-diff',
+                                  changes,
+                                  consolidated: true, // Consolidated mode - group by file
+                                })
+                              }
+                            }}
+                          />
+                        </div>
+                        {isLastResponse && !session.isProcessing && shouldRenderArtifactSummaryCard(session.artifacts) && (
+                          <ArtifactSummaryCard
+                            artifacts={session.artifacts}
+                            onOpenFile={onOpenFile}
+                          />
                         )}
-                        onOpenMultiFileDiff={() => {
-                          const changes = collectFileChanges(turn.activities)
-                          if (changes.length > 0) {
-                            setOverlayState({
-                              type: 'multi-diff',
-                              changes,
-                              consolidated: true, // Consolidated mode - group by file
-                            })
-                          }
-                        }}
-                      />
-                      </div>
+                      </React.Fragment>
                     )
                   })}
                     </motion.div>

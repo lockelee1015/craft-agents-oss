@@ -97,6 +97,7 @@ bun run electron:start
 - **Skills**: Specialized agent instructions stored per-workspace
 - **File Attachments**: Drag-drop images, PDFs, Office documents with auto-conversion
 - **Automations**: Event-driven automation — create agent sessions on label changes, schedules, tool use, and more
+- **Artifact Deliverables**: Explicit `report_artifact` tracking with end-of-flow artifact cards (final user handoff files only)
 
 ## Quick Start
 

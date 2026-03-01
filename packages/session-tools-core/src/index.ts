@@ -151,6 +151,8 @@ export {
   handleTransformData,
   // Render Template
   handleRenderTemplate,
+  // Artifact Reporting
+  handleReportArtifact,
 } from './handlers/index.ts';
 
 export type {
@@ -167,6 +169,7 @@ export type {
   UpdatePreferencesArgs,
   TransformDataArgs,
   RenderTemplateArgs,
+  ReportArtifactArgs,
 } from './handlers/index.ts';
 
 // Tool definitions — single source of truth
@@ -183,6 +186,7 @@ export {
   UpdatePreferencesSchema,
   TransformDataSchema,
   RenderTemplateSchema,
+  ReportArtifactSchema,
   // Descriptions
   TOOL_DESCRIPTIONS,
   // Registry
