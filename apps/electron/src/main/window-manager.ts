@@ -136,8 +136,24 @@ export class WindowManager {
 
     // Show window when first paint is ready (faster perceived startup)
     window.once('ready-to-show', () => {
-      window.show()
+      if (!window.isDestroyed() && !window.isVisible()) {
+        window.show()
+      }
     })
+
+    // Fallback: some packaged environments may never emit ready-to-show.
+    // Ensure the app isn't stuck with no visible window.
+    window.webContents.once('did-finish-load', () => {
+      if (!window.isDestroyed() && !window.isVisible()) {
+        window.show()
+      }
+    })
+    setTimeout(() => {
+      if (!window.isDestroyed() && !window.isVisible()) {
+        windowLog.warn('Window still hidden after timeout; forcing show()')
+        window.show()
+      }
+    }, 4000)
 
     // Open external links in default browser
     window.webContents.setWindowOpenHandler((details) => {

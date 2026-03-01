@@ -1,6 +1,5 @@
-appId: com.lukilabs.craft-agent
+appId: com.lockelee1015.mooncake
 productName: MoonCake
-copyright: Copyright © 2025 Craft Docs Ltd.
 
 electronVersion: "39.2.7"
 

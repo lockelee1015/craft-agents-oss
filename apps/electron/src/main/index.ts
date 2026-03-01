@@ -3,7 +3,7 @@
 import { loadShellEnv } from './shell-env'
 loadShellEnv()
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, screen } from 'electron'
 import { createHash } from 'crypto'
 import { hostname, homedir } from 'os'
 import * as Sentry from '@sentry/electron/main'
@@ -199,6 +199,31 @@ async function createInitialWindows(): Promise<void> {
 
   const validWorkspaceIds = workspaces.map(ws => ws.id)
 
+  // Ensure restored bounds are visible on at least one current display.
+  // This prevents "app running but no window shown" after monitor layout changes.
+  const normalizeBounds = (bounds: { x: number; y: number; width: number; height: number }) => {
+    const MIN_VISIBLE_W = 120
+    const MIN_VISIBLE_H = 80
+    const displays = screen.getAllDisplays()
+    const intersectsAnyDisplay = displays.some(({ bounds: d }) => {
+      const overlapW = Math.max(0, Math.min(bounds.x + bounds.width, d.x + d.width) - Math.max(bounds.x, d.x))
+      const overlapH = Math.max(0, Math.min(bounds.y + bounds.height, d.y + d.height) - Math.max(bounds.y, d.y))
+      return overlapW >= MIN_VISIBLE_W && overlapH >= MIN_VISIBLE_H
+    })
+
+    if (intersectsAnyDisplay) return bounds
+
+    const primary = screen.getPrimaryDisplay().workArea
+    const width = Math.min(Math.max(bounds.width || 1200, 800), primary.width)
+    const height = Math.min(Math.max(bounds.height || 800, 600), primary.height)
+    return {
+      x: Math.round(primary.x + (primary.width - width) / 2),
+      y: Math.round(primary.y + (primary.height - height) / 2),
+      width,
+      height,
+    }
+  }
+
   if (savedState?.windows.length) {
     // Restore windows from saved state
     let restoredCount = 0
@@ -214,7 +239,7 @@ async function createInitialWindows(): Promise<void> {
         focused: saved.focused,
         restoreUrl: saved.url,
       })
-      win.setBounds(saved.bounds)
+      win.setBounds(normalizeBounds(saved.bounds))
 
       restoredCount++
     }
@@ -231,40 +256,48 @@ async function createInitialWindows(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
-  // Register bundled assets root so all seeding functions can find their files
-  // (docs, permissions, themes, tool-icons resolve via getBundledAssetsDir)
-  setBundledAssetsRoot(__dirname)
+  // Startup resource initialization should never block window creation.
+  // If any of these fail in packaged builds, continue boot and surface the
+  // error in stderr so users can still open the app and troubleshoot.
+  try {
+    // Register bundled assets root so all seeding functions can find their files
+    // (docs, permissions, themes, tool-icons resolve via getBundledAssetsDir)
+    setBundledAssetsRoot(__dirname)
 
-  // Initialize backend runtime bootstrapping (Codex vendor root, Claude SDK runtime paths).
-  initializeBackendHostRuntime({
-    hostRuntime: {
-      appRootPath: app.isPackaged ? app.getAppPath() : process.cwd(),
-      resourcesPath: process.resourcesPath,
-      isPackaged: app.isPackaged,
-    },
-  })
+    // Initialize backend runtime bootstrapping (Codex vendor root, Claude SDK runtime paths).
+    initializeBackendHostRuntime({
+      hostRuntime: {
+        appRootPath: app.isPackaged ? app.getAppPath() : process.cwd(),
+        resourcesPath: process.resourcesPath,
+        isPackaged: app.isPackaged,
+      },
+    })
 
-  // Register PowerShell validator root so it can find the bundled parser script
-  // (Windows only: validates PowerShell commands in Explore mode using AST analysis)
-  setPowerShellValidatorRoot(join(__dirname, 'resources'))
+    // Register PowerShell validator root so it can find the bundled parser script
+    // (Windows only: validates PowerShell commands in Explore mode using AST analysis)
+    setPowerShellValidatorRoot(join(__dirname, 'resources'))
 
-  // Initialize bundled docs
-  initializeDocs()
+    // Initialize bundled docs
+    initializeDocs()
 
-  // Initialize bundled release notes
-  initializeReleaseNotes()
+    // Initialize bundled release notes
+    initializeReleaseNotes()
 
-  // Ensure default permissions file exists (copies bundled default.json on first run)
-  ensureDefaultPermissions()
+    // Ensure default permissions file exists (copies bundled default.json on first run)
+    ensureDefaultPermissions()
 
-  // Seed tool icons to ~/.craft-agent/tool-icons/ (copies bundled SVGs on first run)
-  ensureToolIcons()
+    // Seed tool icons to ~/.craft-agent/tool-icons/ (copies bundled SVGs on first run)
+    ensureToolIcons()
 
-  // Seed preset themes to ~/.craft-agent/themes/ (copies bundled theme JSONs on first run)
-  ensurePresetThemes()
+    // Seed preset themes to ~/.craft-agent/themes/ (copies bundled theme JSONs on first run)
+    ensurePresetThemes()
 
-  // Register thumbnail:// protocol handler (scheme was registered earlier, before app.whenReady)
-  registerThumbnailHandler()
+    // Register thumbnail:// protocol handler (scheme was registered earlier, before app.whenReady)
+    registerThumbnailHandler()
+  } catch (error) {
+    mainLog.error('Non-fatal startup resource init failed:', error)
+    console.error('[MoonCake startup] Non-fatal resource init failure:', error)
+  }
 
   // Note: electron-updater handles pending updates internally via autoInstallOnAppQuit
 
@@ -416,7 +449,20 @@ app.whenReady().then(async () => {
     }
   } catch (error) {
     mainLog.error('Failed to initialize app:', error)
-    // Continue anyway - the app will show errors in the UI
+    console.error('[MoonCake startup] Failed to initialize app:', error)
+
+    // Fallback: try to create at least one window so the app is usable.
+    try {
+      if (windowManager && !windowManager.hasWindows()) {
+        const workspaces = getWorkspaces()
+        if (workspaces.length > 0) {
+          windowManager.createWindow({ workspaceId: workspaces[0].id })
+        }
+      }
+    } catch (fallbackError) {
+      mainLog.error('Failed to create fallback window:', fallbackError)
+      console.error('[MoonCake startup] Fallback window creation failed:', fallbackError)
+    }
   }
 
   // macOS: Re-create window when dock icon is clicked
