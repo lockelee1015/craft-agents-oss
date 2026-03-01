@@ -97,8 +97,8 @@ mac:
   #   teamId: ${APPLE_TEAM_ID}
 
 dmg:
-  # Use predictable naming: MoonCake-arm64.dmg, MoonCake-x64.dmg
-  artifactName: "MoonCake-${arch}.dmg"
+  # Include version in DMG filename: MoonCake-0.0.4-arm64.dmg
+  artifactName: "MoonCake-${version}-${arch}.dmg"
   # Custom background (multi-resolution TIFF with 1x+2x for retina support)
   background: resources/dmg-background.tiff
   # Use app icon as the mounted volume icon in Finder

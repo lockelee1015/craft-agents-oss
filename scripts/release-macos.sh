@@ -68,7 +68,7 @@ resolve_app_path() {
 
 resolve_dmg_path() {
   local path
-  path="$(ls -t "$RELEASE_DIR"/Craft-Agent-*.dmg 2>/dev/null | head -n 1 || true)"
+  path="$(ls -t "$RELEASE_DIR"/MoonCake-*.dmg 2>/dev/null | head -n 1 || true)"
   if [[ -z "$path" || ! -f "$path" ]]; then
     echo "Missing dmg file under $RELEASE_DIR" >&2
     exit 1

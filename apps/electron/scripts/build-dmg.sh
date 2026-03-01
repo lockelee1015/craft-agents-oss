@@ -177,8 +177,9 @@ fi
 npx electron-builder $BUILDER_ARGS
 
 # 8. Verify the DMG was built
-# electron-builder.yml uses artifactName to output: MoonCake-${arch}.dmg
-DMG_NAME="MoonCake-${ARCH}.dmg"
+# electron-builder.yml uses artifactName to output: MoonCake-${version}-${arch}.dmg
+ELECTRON_VERSION=$(cat "$ELECTRON_DIR/package.json" | grep '"version"' | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+DMG_NAME="MoonCake-${ELECTRON_VERSION}-${ARCH}.dmg"
 DMG_PATH="$ELECTRON_DIR/release/$DMG_NAME"
 
 if [ ! -f "$DMG_PATH" ]; then
@@ -194,8 +195,6 @@ echo "DMG: $ELECTRON_DIR/release/${DMG_NAME}"
 echo "Size: $(du -h "$ELECTRON_DIR/release/${DMG_NAME}" | cut -f1)"
 
 # 9. Create manifest.json for upload script
-# Read version from package.json
-ELECTRON_VERSION=$(cat "$ELECTRON_DIR/package.json" | grep '"version"' | head -1 | sed 's/.*"version": *"\([^"]*\)".*/\1/')
 echo "Creating manifest.json (version: $ELECTRON_VERSION)..."
 mkdir -p "$ROOT_DIR/.build/upload"
 echo "{\"version\": \"$ELECTRON_VERSION\"}" > "$ROOT_DIR/.build/upload/manifest.json"
