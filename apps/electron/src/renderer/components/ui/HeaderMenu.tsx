@@ -19,6 +19,7 @@ import {
   StyledDropdownMenuSeparator,
 } from './styled-dropdown'
 import { type DocFeature, getDocUrl } from '@craft-agent/shared/docs/doc-links'
+import { useI18n } from '@/context/I18nContext'
 
 interface HeaderMenuProps {
   /** Route string for Open in New Window action */
@@ -30,6 +31,8 @@ interface HeaderMenuProps {
 }
 
 export function HeaderMenu({ route, children, helpFeature }: HeaderMenuProps) {
+  const { te } = useI18n()
+
   const handleOpenInNewWindow = async () => {
     const separator = route.includes('?') ? '&' : '?'
     const url = `craftagents://${route}${separator}window=focused`
@@ -54,14 +57,14 @@ export function HeaderMenu({ route, children, helpFeature }: HeaderMenuProps) {
         {children && <StyledDropdownMenuSeparator />}
         <StyledDropdownMenuItem onClick={handleOpenInNewWindow}>
           <AppWindow className="h-3.5 w-3.5" />
-          <span className="flex-1">Open in New Window</span>
+          <span className="flex-1">{te('Open in New Window')}</span>
         </StyledDropdownMenuItem>
         {helpFeature && (
           <>
             <StyledDropdownMenuSeparator />
             <StyledDropdownMenuItem onClick={handleLearnMore}>
               <ExternalLink className="h-3.5 w-3.5" />
-              <span className="flex-1">Learn More</span>
+              <span className="flex-1">{te('Learn more')}</span>
             </StyledDropdownMenuItem>
           </>
         )}
