@@ -57,10 +57,18 @@ function resolveBundledRuntimePath(hostRuntime: BackendHostRuntimeContext): stri
 
 function resolveClaudeCliPath(hostRuntime: BackendHostRuntimeContext): string | undefined {
   const sdkRelative = join('node_modules', '@anthropic-ai', 'claude-agent-sdk', 'cli.js');
-  return firstExistingPath([
+  const candidates = [
     join(hostRuntime.appRootPath, sdkRelative),
     join(hostRuntime.appRootPath, '..', '..', sdkRelative),
-  ]);
+  ];
+
+  if (hostRuntime.isPackaged && hostRuntime.resourcesPath) {
+    // extraResources may place SDK under "<Resources>/app/node_modules/..."
+    candidates.push(join(hostRuntime.resourcesPath, 'app', sdkRelative));
+    candidates.push(join(hostRuntime.resourcesPath, sdkRelative));
+  }
+
+  return firstExistingPath(candidates);
 }
 
 function resolveClaudeInterceptorPath(hostRuntime: BackendHostRuntimeContext): string | undefined {
@@ -177,10 +185,12 @@ export function applyAnthropicRuntimeBootstrap(
   }
   setPathToClaudeCodeExecutable(paths.claudeCliPath);
 
-  if (!paths.claudeInterceptorPath) {
+  // Prefer source interceptor in dev, but allow bundled CJS interceptor in packaged builds.
+  const resolvedInterceptorPath = paths.claudeInterceptorPath || paths.interceptorBundlePath;
+  if (!resolvedInterceptorPath) {
     throw new Error('Network interceptor not found. The app package may be corrupted.');
   }
-  setInterceptorPath(paths.claudeInterceptorPath);
+  setInterceptorPath(resolvedInterceptorPath);
 
   if (hostRuntime.isPackaged) {
     if (!paths.bundledRuntimePath) {
@@ -189,4 +199,3 @@ export function applyAnthropicRuntimeBootstrap(
     setExecutable(paths.bundledRuntimePath);
   }
 }
-
