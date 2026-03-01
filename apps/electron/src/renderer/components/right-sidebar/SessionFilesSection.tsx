@@ -70,6 +70,7 @@ const itemVariants: Variants = {
 export interface SessionFilesSectionProps {
   sessionId?: string
   className?: string
+  showHeader?: boolean
 }
 
 /**
@@ -367,7 +368,7 @@ function FileTreeItem({
 /**
  * Section displaying session files as a tree
  */
-export function SessionFilesSection({ sessionId, className }: SessionFilesSectionProps) {
+export function SessionFilesSection({ sessionId, className, showHeader = true }: SessionFilesSectionProps) {
   const { te } = useI18n()
   const [files, setFiles] = useState<SessionFile[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -493,10 +494,12 @@ export function SessionFilesSection({ sessionId, className }: SessionFilesSectio
 
   return (
     <div className={cn('flex flex-col h-full min-h-0', className)}>
-      {/* Header - matches sidebar styling with select-none, extra top padding for visual balance */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 select-none">
-        <span className="text-xs font-medium text-muted-foreground">{te('Files')}</span>
-      </div>
+      {showHeader && (
+        /* Header - matches sidebar styling with select-none, extra top padding for visual balance */
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 select-none">
+          <span className="text-xs font-medium text-muted-foreground">{te('Files')}</span>
+        </div>
+      )}
 
       {/* File tree - px-2 is on nav to match LeftSidebar exactly (constrains grid width) */}
       {/* overflow-x-hidden prevents horizontal scroll, forcing truncation */}

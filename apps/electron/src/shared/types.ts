@@ -663,10 +663,8 @@ export const IPC_CHANNELS = {
   // Debug logging from renderer → main log file
   DEBUG_LOG: 'debug:log',
 
-  // Session info panel
+  // Session files panel
   GET_SESSION_FILES: 'sessions:getFiles',
-  GET_SESSION_NOTES: 'sessions:getNotes',
-  SET_SESSION_NOTES: 'sessions:setNotes',
   WATCH_SESSION_FILES: 'sessions:watchFiles',      // Start watching session directory
   UNWATCH_SESSION_FILES: 'sessions:unwatchFiles',  // Stop watching
   SESSION_FILES_CHANGED: 'sessions:filesChanged',  // Event: main → renderer
@@ -1119,10 +1117,8 @@ export interface ElectronAPI {
   deleteDraft(sessionId: string): Promise<void>
   getAllDrafts(): Promise<Record<string, string>>
 
-  // Session Info Panel
+  // Session files panel
   getSessionFiles(sessionId: string): Promise<SessionFile[]>
-  getSessionNotes(sessionId: string): Promise<string>
-  setSessionNotes(sessionId: string, content: string): Promise<void>
   watchSessionFiles(sessionId: string): Promise<void>
   unwatchSessionFiles(): Promise<void>
   onSessionFilesChanged(callback: (sessionId: string) => void): () => void

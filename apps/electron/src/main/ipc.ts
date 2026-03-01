@@ -2019,7 +2019,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
   })
 
   // ============================================================
-  // Session Info Panel (files, notes, file watching)
+  // Session files panel (files, file watching)
   // ============================================================
 
   // Recursive directory scanner for session files
@@ -2138,37 +2138,6 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
     if (watchedSessionId) {
       watchedSessionId = null
-    }
-  })
-
-  // Get session notes (reads notes.md from session directory)
-  ipcMain.handle(IPC_CHANNELS.GET_SESSION_NOTES, async (_event, sessionId: string) => {
-    const sessionPath = sessionManager.getSessionPath(sessionId)
-    if (!sessionPath) return ''
-
-    try {
-      const notesPath = join(sessionPath, 'notes.md')
-      const content = await readFile(notesPath, 'utf-8')
-      return content
-    } catch {
-      // File doesn't exist yet - return empty string
-      return ''
-    }
-  })
-
-  // Set session notes (writes to notes.md in session directory)
-  ipcMain.handle(IPC_CHANNELS.SET_SESSION_NOTES, async (_event, sessionId: string, content: string) => {
-    const sessionPath = sessionManager.getSessionPath(sessionId)
-    if (!sessionPath) {
-      throw new Error(`Session not found: ${sessionId}`)
-    }
-
-    try {
-      const notesPath = join(sessionPath, 'notes.md')
-      await writeFile(notesPath, content, 'utf-8')
-    } catch (error) {
-      ipcLog.error('Failed to save session notes:', error)
-      throw error
     }
   })
 
