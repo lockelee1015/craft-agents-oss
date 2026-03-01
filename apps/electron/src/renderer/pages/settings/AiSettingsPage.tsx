@@ -14,6 +14,7 @@ import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
+import { useI18n } from '@/context/I18nContext'
 import { routes } from '@/lib/navigate'
 import { X, MoreHorizontal, Pencil, Trash2, Star, ChevronDown, ChevronRight, CheckCircle2, AlertTriangle, RefreshCcw, Settings2 } from 'lucide-react'
 import type { CredentialHealthStatus, CredentialHealthIssue } from '../../../shared/types'
@@ -90,25 +91,26 @@ export const meta: DetailsPageMeta = {
 // ============================================
 
 /** Get user-friendly message for credential health issue */
-function getHealthIssueMessage(issue: CredentialHealthIssue): string {
+function getHealthIssueMessage(issue: CredentialHealthIssue, te: (text: string) => string): string {
   switch (issue.type) {
     case 'file_corrupted':
-      return 'Credential file is corrupted. Please re-authenticate.'
+      return te('Credential file is corrupted. Please re-authenticate.')
     case 'decryption_failed':
-      return 'Credentials from another machine detected. Please re-authenticate on this device.'
+      return te('Credentials from another machine detected. Please re-authenticate on this device.')
     case 'no_default_credentials':
-      return 'No credentials found for your default connection.'
+      return te('No credentials found for your default connection.')
     default:
-      return issue.message || 'Credential issue detected.'
+      return issue.message || te('Credential issue detected.')
   }
 }
 
 interface CredentialHealthBannerProps {
   issues: CredentialHealthIssue[]
   onReauthenticate: () => void
+  te: (text: string) => string
 }
 
-function CredentialHealthBanner({ issues, onReauthenticate }: CredentialHealthBannerProps) {
+function CredentialHealthBanner({ issues, onReauthenticate, te }: CredentialHealthBannerProps) {
   if (issues.length === 0) return null
 
   return (
@@ -117,10 +119,10 @@ function CredentialHealthBanner({ issues, onReauthenticate }: CredentialHealthBa
         <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-medium text-amber-700 dark:text-amber-400">
-            Credential Issue Detected
+            {te('Credential Issue Detected')}
           </h4>
           <p className="mt-1 text-sm text-amber-600 dark:text-amber-300/80">
-            {getHealthIssueMessage(issues[0])}
+            {getHealthIssueMessage(issues[0], te)}
           </p>
         </div>
         <Button
@@ -129,7 +131,7 @@ function CredentialHealthBanner({ issues, onReauthenticate }: CredentialHealthBa
           onClick={onReauthenticate}
           className="flex-shrink-0 border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
         >
-          Re-authenticate
+          {te('Re-authenticate')}
         </Button>
       </div>
     </div>
@@ -175,9 +177,10 @@ interface ConnectionRowProps {
   onEdit: () => void
   validationState: ValidationState
   validationError?: string
+  te: (text: string) => string
 }
 
-function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, onSetDefault, onValidate, onReauthenticate, onEdit, validationState, validationError }: ConnectionRowProps) {
+function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, onSetDefault, onValidate, onReauthenticate, onEdit, validationState, validationError, te }: ConnectionRowProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [piBaseUrl, setPiBaseUrl] = useState<string | undefined>(undefined)
 
@@ -192,9 +195,9 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
   // Build description with provider, default indicator, auth status, and validation state
   const getDescription = () => {
     // Show validation state if not idle
-    if (validationState === 'validating') return 'Validating...'
-    if (validationState === 'success') return 'Connection valid'
-    if (validationState === 'error') return validationError || 'Validation failed'
+    if (validationState === 'validating') return te('Validating...')
+    if (validationState === 'success') return te('Connection valid')
+    if (validationState === 'error') return validationError || te('Validation failed')
 
     const parts: string[] = []
 
@@ -203,20 +206,20 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
     const provider = connection.providerType || connection.type
     const isSubscription = connection.authType === 'oauth'
     switch (provider) {
-      case 'anthropic': parts.push(isSubscription ? 'Anthropic Subscription' : 'Anthropic API'); break
-      case 'anthropic_compat': parts.push('Anthropic Compatible'); break
-      case 'bedrock': parts.push('AWS Bedrock'); break
-      case 'vertex': parts.push('Google Vertex'); break
+      case 'anthropic': parts.push(isSubscription ? te('Anthropic Subscription') : te('Anthropic API')); break
+      case 'anthropic_compat': parts.push(te('Anthropic Compatible')); break
+      case 'bedrock': parts.push(te('AWS Bedrock')); break
+      case 'vertex': parts.push(te('Google Vertex')); break
       case 'pi': {
         // Show upstream provider name for API key connections (e.g. "Google AI Studio")
         const piLabel = !isSubscription && connection.piAuthProvider
           ? PI_AUTH_PROVIDER_LABELS[connection.piAuthProvider]
           : null
-        parts.push(piLabel ?? 'Craft Agents Backend')
+        parts.push(piLabel ?? te('Craft Agents Backend'))
         break
       }
-      case 'pi_compat': parts.push('Craft Agents Backend Compatible'); break
-      default: parts.push(provider || 'Unknown')
+      case 'pi_compat': parts.push(te('Craft Agents Backend Compatible')); break
+      default: parts.push(provider || te('Unknown'))
     }
 
     // Base URL for API key connections (show custom endpoint or default for provider)
@@ -241,7 +244,7 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
     }
 
     // Auth status
-    if (!connection.isAuthenticated) parts.push('Not authenticated')
+    if (!connection.isAuthenticated) parts.push(te('Not authenticated'))
 
     return parts.join(' · ')
   }
@@ -254,7 +257,7 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
           <span>{connection.name}</span>
           {connection.isDefault && (
             <span className="inline-flex items-center h-5 px-2 text-[11px] font-medium rounded-[4px] bg-background shadow-minimal text-foreground/60">
-              Default
+              {te('Default')}
             </span>
           )}
         </div>
@@ -273,23 +276,23 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
         <StyledDropdownMenuContent align="end">
           <StyledDropdownMenuItem onClick={onRenameClick}>
             <Pencil className="h-3.5 w-3.5" />
-            <span>Rename</span>
+            <span>{te('Rename')}</span>
           </StyledDropdownMenuItem>
           {!connection.isDefault && (
             <StyledDropdownMenuItem onClick={onSetDefault}>
               <Star className="h-3.5 w-3.5" />
-              <span>Set as default</span>
+              <span>{te('Set as default')}</span>
             </StyledDropdownMenuItem>
           )}
           {connection.authType === 'oauth' ? (
             <StyledDropdownMenuItem onClick={onReauthenticate}>
               <RefreshCcw className="h-3.5 w-3.5" />
-              <span>Re-authenticate</span>
+              <span>{te('Re-authenticate')}</span>
             </StyledDropdownMenuItem>
           ) : (
             <StyledDropdownMenuItem onClick={onEdit}>
               <Settings2 className="h-3.5 w-3.5" />
-              <span>Edit</span>
+              <span>{te('Edit')}</span>
             </StyledDropdownMenuItem>
           )}
           <StyledDropdownMenuItem
@@ -297,7 +300,7 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
             disabled={validationState === 'validating'}
           >
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>Validate Connection</span>
+            <span>{te('Validate Connection')}</span>
           </StyledDropdownMenuItem>
           <StyledDropdownMenuSeparator />
           <StyledDropdownMenuItem
@@ -306,7 +309,7 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
             disabled={isLastConnection}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            <span>Delete</span>
+            <span>{te('Delete')}</span>
           </StyledDropdownMenuItem>
         </StyledDropdownMenuContent>
       </DropdownMenu>
@@ -322,9 +325,10 @@ interface WorkspaceOverrideCardProps {
   workspace: Workspace
   llmConnections: LlmConnectionWithStatus[]
   onSettingsChange: () => void
+  te: (text: string) => string
 }
 
-function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange }: WorkspaceOverrideCardProps) {
+function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange, te }: WorkspaceOverrideCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [settings, setSettings] = useState<WorkspaceSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -396,7 +400,7 @@ function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange }: 
 
   // Get summary text for collapsed state
   const getSummary = () => {
-    if (!hasOverrides) return 'Using defaults'
+    if (!hasOverrides) return te('Using defaults')
     const parts: string[] = []
     if (settings?.defaultLlmConnection) {
       const conn = llmConnections.find(c => c.slug === settings.defaultLlmConnection)
@@ -437,7 +441,7 @@ function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange }: 
           <div className="text-left">
             <div className="text-sm font-medium">{workspace.name}</div>
             <div className="text-xs text-muted-foreground">
-              {isLoading ? 'Loading...' : getSummary()}
+              {isLoading ? te('Loading...') : getSummary()}
             </div>
           </div>
         </div>
@@ -459,38 +463,38 @@ function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange }: 
           >
             <div className="border-t border-border/50 px-4 py-2">
               <SettingsMenuSelectRow
-                label="Connection"
-                description="API connection for new chats"
+                label={te('Connection')}
+                description={te('API connection for new chats')}
                 value={currentConnection}
                 onValueChange={handleConnectionChange}
                 options={[
-                  { value: 'global', label: 'Use default', description: 'Inherit from app settings' },
+                  { value: 'global', label: te('Use default'), description: te('Inherit from app settings') },
                   ...llmConnections.map((conn) => ({
                     value: conn.slug,
                     label: conn.name,
-                    description: conn.providerType === 'anthropic' ? 'Anthropic' :
-                                 conn.providerType === 'pi' ? 'Craft Agents Backend' :
-                                 conn.providerType || 'Unknown',
+                    description: conn.providerType === 'anthropic' ? te('Anthropic API') :
+                                 conn.providerType === 'pi' ? te('Craft Agents Backend') :
+                                 conn.providerType || te('Unknown'),
                   })),
                 ]}
               />
               <SettingsMenuSelectRow
-                label="Model"
-                description="AI model for new chats"
+                label={te('Model')}
+                description={te('AI model for new chats')}
                 value={currentModel}
                 onValueChange={handleModelChange}
                 options={[
-                  { value: 'global', label: 'Use default', description: 'Inherit from app settings' },
+                  { value: 'global', label: te('Use default'), description: te('Inherit from app settings') },
                   ...getModelOptionsForConnection(workspaceEffectiveConnection),
                 ]}
               />
               <SettingsMenuSelectRow
-                label="Thinking"
-                description="Reasoning depth for new chats"
+                label={te('Thinking')}
+                description={te('Reasoning depth for new chats')}
                 value={currentThinking}
                 onValueChange={handleThinkingChange}
                 options={[
-                  { value: 'global', label: 'Use default', description: 'Inherit from app settings' },
+                  { value: 'global', label: te('Use default'), description: te('Inherit from app settings') },
                   ...THINKING_LEVELS.map(({ id, name, description }) => ({
                     value: id,
                     label: name,
@@ -522,6 +526,7 @@ function getApiKeyMethodForConnection(conn: LlmConnectionWithStatus): ApiSetupMe
 // ============================================
 
 export default function AiSettingsPage() {
+  const { te } = useI18n()
   const { llmConnections, refreshLlmConnections } = useAppShellContext()
 
   // API Setup overlay state
@@ -758,7 +763,7 @@ export default function AiSettingsPage() {
     } catch (error) {
       setValidationStates(prev => ({
         ...prev,
-        [slug]: { state: 'error', error: 'Validation failed' }
+        [slug]: { state: 'error', error: te('Validation failed') }
       }))
       setTimeout(() => {
         setValidationStates(prev => ({ ...prev, [slug]: { state: 'idle' } }))
@@ -811,7 +816,7 @@ export default function AiSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="AI" actions={<HeaderMenu route={routes.view.settings('ai')} />} />
+      <PanelHeader title={te('AI')} actions={<HeaderMenu route={routes.view.settings('ai')} />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
@@ -819,39 +824,40 @@ export default function AiSettingsPage() {
             <CredentialHealthBanner
               issues={credentialHealthIssues}
               onReauthenticate={handleReauthenticate}
+              te={te}
             />
 
             <div className="space-y-8">
               {/* Default Settings - only show if connections exist */}
               {llmConnections.length > 0 && (
-              <SettingsSection title="Default" description="Settings for new chats when no workspace override is set.">
+              <SettingsSection title={te('Default')} description={te('Settings for new chats when no workspace override is set.')}>
                 <SettingsCard>
                   <SettingsMenuSelectRow
-                    label="Connection"
-                    description="API connection for new chats"
+                    label={te('Connection')}
+                    description={te('API connection for new chats')}
                     value={defaultConnection?.slug || ''}
                     onValueChange={handleSetDefaultConnection}
                     options={llmConnections.map((conn) => ({
                       value: conn.slug,
                       label: conn.name,
-                      description: conn.providerType === 'anthropic' ? 'Anthropic API' :
-                                   conn.providerType === 'bedrock' ? 'AWS Bedrock' :
-                                   conn.providerType === 'vertex' ? 'Google Vertex' :
-                                   conn.providerType === 'pi' ? 'Craft Agents Backend' :
-                                   conn.providerType === 'pi_compat' ? 'Craft Agents Backend Compatible' :
-                                   conn.providerType || 'Unknown',
+                      description: conn.providerType === 'anthropic' ? te('Anthropic API') :
+                                   conn.providerType === 'bedrock' ? te('AWS Bedrock') :
+                                   conn.providerType === 'vertex' ? te('Google Vertex') :
+                                   conn.providerType === 'pi' ? te('Craft Agents Backend') :
+                                   conn.providerType === 'pi_compat' ? te('Craft Agents Backend Compatible') :
+                                   conn.providerType || te('Unknown'),
                     }))}
                   />
                   <SettingsMenuSelectRow
-                    label="Model"
-                    description="AI model for new chats"
+                    label={te('Model')}
+                    description={te('AI model for new chats')}
                     value={defaultModel}
                     onValueChange={handleDefaultModelChange}
                     options={getModelOptionsForConnection(defaultConnection)}
                   />
                   <SettingsMenuSelectRow
-                    label="Thinking"
-                    description="Reasoning depth for new chats"
+                    label={te('Thinking')}
+                    description={te('Reasoning depth for new chats')}
                     value={defaultThinking}
                     onValueChange={(v) => handleDefaultThinkingChange(v as ThinkingLevel)}
                     options={THINKING_LEVELS.map(({ id, name, description }) => ({
@@ -866,7 +872,7 @@ export default function AiSettingsPage() {
 
               {/* Workspace Overrides - only show if connections exist */}
               {workspaces.length > 0 && llmConnections.length > 0 && (
-                <SettingsSection title="Workspace Overrides" description="Override default settings per workspace.">
+                <SettingsSection title={te('Workspace Overrides')} description={te('Override default settings per workspace.')}>
                   <div className="space-y-2">
                     {workspaces.map((workspace) => (
                       <WorkspaceOverrideCard
@@ -874,6 +880,7 @@ export default function AiSettingsPage() {
                         workspace={workspace}
                         llmConnections={llmConnections}
                         onSettingsChange={handleWorkspaceSettingsChange}
+                        te={te}
                       />
                     ))}
                   </div>
@@ -881,11 +888,11 @@ export default function AiSettingsPage() {
               )}
 
               {/* Connections Management */}
-              <SettingsSection title="Connections" description="Manage your AI provider connections.">
+              <SettingsSection title={te('Connections')} description={te('Manage your AI provider connections.')}>
                 <SettingsCard>
                   {llmConnections.length === 0 ? (
                     <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                      No connections configured. Add a connection to get started.
+                      {te('No connections configured. Add a connection to get started.')}
                     </div>
                   ) : (
                     [...llmConnections]
@@ -907,6 +914,7 @@ export default function AiSettingsPage() {
                         onEdit={() => handleEditConnection(conn)}
                         validationState={validationStates[conn.slug]?.state || 'idle'}
                         validationError={validationStates[conn.slug]?.error}
+                        te={te}
                       />
                     ))
                   )}
@@ -916,7 +924,7 @@ export default function AiSettingsPage() {
                     onClick={() => openApiSetup()}
                     className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors"
                   >
-                    + Add Connection
+                    {te('+ Add Connection')}
                   </button>
                 </div>
               </SettingsSection>
@@ -949,7 +957,7 @@ export default function AiSettingsPage() {
                   <button
                     onClick={handleCloseApiSetup}
                     className="p-1.5 rounded-[6px] transition-all bg-background shadow-minimal text-muted-foreground/50 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    title="Close (Esc)"
+                    title={te('Close (Esc)')}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -960,11 +968,11 @@ export default function AiSettingsPage() {
               <RenameDialog
                 open={renameDialogOpen}
                 onOpenChange={setRenameDialogOpen}
-                title="Rename Connection"
+                title={te('Rename Connection')}
                 value={renameValue}
                 onValueChange={setRenameValue}
                 onSubmit={handleRenameSubmit}
-                placeholder="Enter connection name..."
+                placeholder={te('Enter connection name...')}
               />
             </div>
           </div>

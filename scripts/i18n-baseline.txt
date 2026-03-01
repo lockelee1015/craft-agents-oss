@@ -1,0 +1,356 @@
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|API Key
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|Comma-separated list. The first model is the default. The last is used for summarization.
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|Endpoint
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|Loading models...
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|reasoning
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|Required for custom endpoints. Use the provider-specific model ID.
+hardcoded-english|apps/electron/src/renderer/components/apisetup/ApiKeyInput.tsx|Search models...
+hardcoded-english|apps/electron/src/renderer/components/apisetup/OAuthConnect.tsx|Authorization Code
+hardcoded-english|apps/electron/src/renderer/components/apisetup/OAuthConnect.tsx|Paste your authorization code here
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ActiveOptionBadges.tsx|Ultrathink
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Archive
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Delete
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Flag All
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Labels
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Status
+hardcoded-english|apps/electron/src/renderer/components/app-shell/BatchSessionMenu.tsx|Unflag All
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx|Conversation Compacted
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx|Just describe it — I'll handle the rest
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx|Open in new window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx|Warning
+hardcoded-english|apps/electron/src/renderer/components/app-shell/ChatDisplay.tsx|What would you like to change?
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/EscapeInterruptOverlay.tsx|Esc
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Add sources in Settings.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Choose Folder...
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Connection default
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Connection Unavailable
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Context
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Filter folders...
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Model
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|No folders found
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Not authenticated
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Reset
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Search sources...
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|The connection used by this session has been removed. Create a new session to continue.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/FreeFormInput.tsx|Working directory
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/CredentialRequest.tsx|Authentication Required
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/CredentialRequest.tsx|Cancel
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/CredentialRequest.tsx|Credentials are encrypted at rest
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/CredentialRequest.tsx|Save
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/PermissionRequest.tsx|Allow
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/PermissionRequest.tsx|Always Allow
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/PermissionRequest.tsx|Deny
+hardcoded-english|apps/electron/src/renderer/components/app-shell/input/structured/PermissionRequest.tsx|Permission Required
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MainContentPanel.tsx|No automations configured
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MainContentPanel.tsx|No skills configured
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MainContentPanel.tsx|No sources configured
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MainContentPanel.tsx|Select a conversation to get started
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MultiSelectPanel.tsx|Archive
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MultiSelectPanel.tsx|Change Status
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MultiSelectPanel.tsx|Click
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MultiSelectPanel.tsx|Esc
+hardcoded-english|apps/electron/src/renderer/components/app-shell/MultiSelectPanel.tsx|Set Labels
+hardcoded-english|apps/electron/src/renderer/components/app-shell/Panel.tsx|Subtitle
+hardcoded-english|apps/electron/src/renderer/components/app-shell/Panel.tsx|Title
+hardcoded-english|apps/electron/src/renderer/components/app-shell/PanelHeader.tsx|Add
+hardcoded-english|apps/electron/src/renderer/components/app-shell/PanelHeader.tsx|Chat Name
+hardcoded-english|apps/electron/src/renderer/components/app-shell/PanelHeader.tsx|Conversations
+hardcoded-english|apps/electron/src/renderer/components/app-shell/PanelHeader.tsx|Delete
+hardcoded-english|apps/electron/src/renderer/components/app-shell/PanelHeader.tsx|Rename
+hardcoded-english|apps/electron/src/renderer/components/app-shell/RightSidebar.tsx|Files panel - Coming soon
+hardcoded-english|apps/electron/src/renderer/components/app-shell/RightSidebar.tsx|History panel - Coming soon
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionBadges.tsx|New
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionBadges.tsx|Plan
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|Enter session name...
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|No archived sessions
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|No results in current filter
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|No sessions found
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|No sessions yet
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|Rename Session
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|Searched titles and message content
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|Sessions with your agent appear here. Start one to get going.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionList.tsx|Sessions you archive will appear here. Archive sessions to keep your list tidy while preserving conversations.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Archive
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Copy Path
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Delete
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Flag
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Labels
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Mark as Unread
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Open in New Window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Regenerate Title
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Rename
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Share
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Shared
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Status
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Unarchive
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenu.tsx|Unflag
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenuParts.tsx|Copy Link
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenuParts.tsx|Open in Browser
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenuParts.tsx|Stop Sharing
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionMenuParts.tsx|Update Share
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionSearchHeader.tsx|Close search
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SessionStatusIcon.tsx|Change todo state
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Add Automation
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Add New Label
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Add Skill
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Add Source
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Configure Statuses
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Delete Label
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Delete View
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Edit Labels
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Edit Views
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Learn More about Automations
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SidebarMenu.tsx|Open in New Window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SkillMenu.tsx|Delete Skill
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SkillMenu.tsx|Open in New Window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SkillsListPanel.tsx|Add Skill
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SkillsListPanel.tsx|No skills configured
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SkillsListPanel.tsx|Skills are reusable instructions that teach your agent specialized behaviors.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SourceMenu.tsx|Delete Source
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SourceMenu.tsx|Open in New Window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SourcesListPanel.tsx|Add Source
+hardcoded-english|apps/electron/src/renderer/components/app-shell/SourcesListPanel.tsx|Sources connect your agent to external data — MCP servers, REST APIs, and local folders.
+hardcoded-english|apps/electron/src/renderer/components/app-shell/TaskActionMenu.tsx|Click for task actions
+hardcoded-english|apps/electron/src/renderer/components/app-shell/TaskActionMenu.tsx|Stop Task
+hardcoded-english|apps/electron/src/renderer/components/app-shell/TaskActionMenu.tsx|View Output
+hardcoded-english|apps/electron/src/renderer/components/app-shell/WorkspaceSwitcher.tsx|Add Workspace...
+hardcoded-english|apps/electron/src/renderer/components/app-shell/WorkspaceSwitcher.tsx|Open in new window
+hardcoded-english|apps/electron/src/renderer/components/app-shell/WorkspaceSwitcher.tsx|Select workspace
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationActionRow.tsx|Empty prompt
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationCard.tsx|Run Test
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationCard.tsx|Then
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationCard.tsx|When
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationEventTimeline.tsx|No activity yet.
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Access Level
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Event
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Labels
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Next runs
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Only when matching
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Paused
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Raw config
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Recent Activity
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Repeats
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Schedule expression
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Settings
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Status
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Then
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|This automation is turned off. Enable it to start running again.
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Timezone
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|Timing
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|What causes this automation to run
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationInfoPage.tsx|When
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationMenu.tsx|Delete
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationMenu.tsx|Duplicate
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationMenu.tsx|Edit Configuration
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationMenu.tsx|Run Test
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationsListPanel.tsx|Add Automation
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationsListPanel.tsx|Automations run actions when events occur — execute commands on schedules, react to label changes, or trigger prompts automatically.
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationsListPanel.tsx|No automations configured
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationsListPanel.tsx|Prompt
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationsListPanel.tsx|Search automations...
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationTestPanel.tsx|Running test...
+hardcoded-english|apps/electron/src/renderer/components/automations/AutomationTestPanel.tsx|Test Failed
+hardcoded-english|apps/electron/src/renderer/components/automations/BatchAutomationMenu.tsx|Delete
+hardcoded-english|apps/electron/src/renderer/components/automations/CronBuilder.tsx|Advanced
+hardcoded-english|apps/electron/src/renderer/components/automations/CronBuilder.tsx|Common Schedules
+hardcoded-english|apps/electron/src/renderer/components/automations/CronBuilder.tsx|Custom Schedule
+hardcoded-english|apps/electron/src/renderer/components/chat/AuthRequestCard.tsx|Complete authentication in your browser
+hardcoded-english|apps/electron/src/renderer/components/files/FileViewer.tsx|Click a file path in the chat to view it here
+hardcoded-english|apps/electron/src/renderer/components/files/FileViewer.tsx|Error loading file
+hardcoded-english|apps/electron/src/renderer/components/files/FileViewer.tsx|Loading content...
+hardcoded-english|apps/electron/src/renderer/components/files/FileViewer.tsx|No file selected
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|Description
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|Flags
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|Label
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|No auto-apply rules configured
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|Pattern
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|Template
+hardcoded-english|apps/electron/src/renderer/components/info/AutoRulesDataTable.tsx|View Fullscreen
+hardcoded-english|apps/electron/src/renderer/components/info/Info_DataTable.tsx|Authenticate with this source to view available data
+hardcoded-english|apps/electron/src/renderer/components/info/Info_DataTable.tsx|Name
+hardcoded-english|apps/electron/src/renderer/components/info/Info_GroupedList.tsx|Authenticate with this source to view available tools
+hardcoded-english|apps/electron/src/renderer/components/info/Info_Markdown.tsx|View Fullscreen
+hardcoded-english|apps/electron/src/renderer/components/info/Info_Page.tsx|Error loading content
+hardcoded-english|apps/electron/src/renderer/components/info/LabelsDataTable.tsx|Color
+hardcoded-english|apps/electron/src/renderer/components/info/LabelsDataTable.tsx|Name
+hardcoded-english|apps/electron/src/renderer/components/info/LabelsDataTable.tsx|No labels configured
+hardcoded-english|apps/electron/src/renderer/components/info/LabelsDataTable.tsx|Type
+hardcoded-english|apps/electron/src/renderer/components/info/LabelsDataTable.tsx|View Fullscreen
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|Access
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|Comment
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|No permissions configured
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|Pattern
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|Type
+hardcoded-english|apps/electron/src/renderer/components/info/PermissionsDataTable.tsx|View Fullscreen
+hardcoded-english|apps/electron/src/renderer/components/info/ToolsDataTable.tsx|Access
+hardcoded-english|apps/electron/src/renderer/components/info/ToolsDataTable.tsx|Description
+hardcoded-english|apps/electron/src/renderer/components/info/ToolsDataTable.tsx|No tools available
+hardcoded-english|apps/electron/src/renderer/components/info/ToolsDataTable.tsx|Tool
+hardcoded-english|apps/electron/src/renderer/components/KeyboardShortcutsDialog.tsx|Keyboard Shortcuts
+hardcoded-english|apps/electron/src/renderer/components/onboarding/APISetupStep.tsx|Beta
+hardcoded-english|apps/electron/src/renderer/components/onboarding/APISetupStep.tsx|Set up your Agent
+hardcoded-english|apps/electron/src/renderer/components/onboarding/CompletionStep.tsx|Get Started
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Already have Git installed?
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Browse...
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|C:\Program Files\Git\bin\bash.exe
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Craft Agent needs Git Bash to run shell commands on Windows. It was not found on your system.
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Download Git for Windows
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Git Bash Required
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|If Git is installed in a non-standard location, you can specify the path to bash.exe.
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Install Git for Windows
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|The easiest way to get Git Bash. It's free and includes everything you need.
+hardcoded-english|apps/electron/src/renderer/components/onboarding/GitBashWarning.tsx|Use this path
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|Connect to Ollama or any OpenAI-compatible local server.
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|Default Ollama port is 11434. Change if using a custom setup.
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|e.g. qwen3-coder, llama3.3
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|Endpoint
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|Local Model
+hardcoded-english|apps/electron/src/renderer/components/onboarding/LocalModelStep.tsx|ollama pull
+hardcoded-english|apps/electron/src/renderer/components/onboarding/ReauthScreen.tsx|Reset app and start fresh...
+hardcoded-english|apps/electron/src/renderer/components/onboarding/ReauthScreen.tsx|Session Expired
+hardcoded-english|apps/electron/src/renderer/components/onboarding/ReauthScreen.tsx|Your conversations and settings are preserved.
+hardcoded-english|apps/electron/src/renderer/components/preview/TableOfContents.tsx|No headings
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|All credentials and API keys
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|All preferences and session data
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|All workspaces and their settings
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|Back up any important data first!
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|Cancel
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|Enter answer
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|permanently delete
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|Reset App
+hardcoded-english|apps/electron/src/renderer/components/ResetConfirmationDialog.tsx|This action cannot be undone.
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionFilesSection.tsx|Files
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionFilesSection.tsx|Open
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|Chat Info
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|Loading session...
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|Name
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|No session selected
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|Notes
+hardcoded-english|apps/electron/src/renderer/components/right-sidebar/SessionMetadataPanel.tsx|Untitled
+hardcoded-english|apps/electron/src/renderer/components/settings/SearchableModelInput.tsx|No models found
+hardcoded-english|apps/electron/src/renderer/components/settings/SearchableModelInput.tsx|Search models...
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsCard.tsx|Option 1
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsCard.tsx|Option 2
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsEditRow.tsx|Edit
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsInput.tsx|Enter your name...
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsInput.tsx|Name
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsMenuSelect.tsx|No results found
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|API Key
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|Balanced
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|Most capable
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|Opus 4.6
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|Pay-as-you-go with your Anthropic key
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRadioGroup.tsx|Sonnet 4.5
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRow.tsx|Change
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRow.tsx|Theme
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsRow.tsx|Working Directory
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSection.tsx|Billing
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSection.tsx|Choose how you pay
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSection.tsx|Model
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSection.tsx|Permissions
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSection.tsx|Workspace
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSelect.tsx|Select timezone...
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsSelect.tsx|Timezone
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsTextarea.tsx|Additional context for the AI assistant
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsTextarea.tsx|Notes
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsToggle.tsx|Desktop notifications
+hardcoded-english|apps/electron/src/renderer/components/settings/SettingsToggle.tsx|Get notified when AI finishes working
+hardcoded-english|apps/electron/src/renderer/components/ui/data-table.tsx|Name
+hardcoded-english|apps/electron/src/renderer/components/ui/dialog.tsx|Close
+hardcoded-english|apps/electron/src/renderer/components/ui/EditPopover.tsx|Edit
+hardcoded-english|apps/electron/src/renderer/components/ui/fading-text.tsx|Custom fade width
+hardcoded-english|apps/electron/src/renderer/components/ui/fading-text.tsx|Long text that might overflow
+hardcoded-english|apps/electron/src/renderer/components/ui/HeaderMenu.tsx|Learn More
+hardcoded-english|apps/electron/src/renderer/components/ui/HeaderMenu.tsx|Open in New Window
+hardcoded-english|apps/electron/src/renderer/components/ui/label-menu.tsx|Add New Label
+hardcoded-english|apps/electron/src/renderer/components/ui/label-menu.tsx|Labels
+hardcoded-english|apps/electron/src/renderer/components/ui/label-menu.tsx|States
+hardcoded-english|apps/electron/src/renderer/components/ui/label-value-popover.tsx|Remove
+hardcoded-english|apps/electron/src/renderer/components/ui/label-value-popover.tsx|Select date
+hardcoded-english|apps/electron/src/renderer/components/ui/label-value-popover.tsx|tomorrow, next friday...
+hardcoded-english|apps/electron/src/renderer/components/ui/mention-menu.tsx|Mention files, skills, sources
+hardcoded-english|apps/electron/src/renderer/components/ui/mention-menu.tsx|No results
+hardcoded-english|apps/electron/src/renderer/components/ui/rename-dialog.tsx|Enter a name...
+hardcoded-english|apps/electron/src/renderer/components/ui/rename-dialog.tsx|Save
+hardcoded-english|apps/electron/src/renderer/components/ui/rich-text-input.tsx|typed
+hardcoded-english|apps/electron/src/renderer/components/ui/session-status-menu.tsx|Filter statuses...
+hardcoded-english|apps/electron/src/renderer/components/ui/session-status-menu.tsx|No status found
+hardcoded-english|apps/electron/src/renderer/components/ui/slash-command-menu.tsx|No commands found
+hardcoded-english|apps/electron/src/renderer/components/ui/slash-command-menu.tsx|Use @ for skills and files
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Add Workspace
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Choose an existing folder as workspace.
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Create new
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Open folder
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Start fresh with an empty workspace.
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_Choice.tsx|Where your ideas meet the tools to make them happen.
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Back
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Choose a location
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Create
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Create workspace
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Default location
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Enter a name and choose where to store your workspace.
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Location
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|My Workspace
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|under .craft-agent folder
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_CreateNew.tsx|Workspace name
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Back
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Browse
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Choose any folder to use as workspace.
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Choose existing folder
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|My Workspace
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|No folder selected
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Open
+hardcoded-english|apps/electron/src/renderer/components/workspace/AddWorkspaceStep_OpenFolder.tsx|Workspace name
+hardcoded-english|apps/electron/src/renderer/components/workspace/WorkspaceCreationScreen.tsx|Close
+hardcoded-english|apps/electron/src/renderer/main.tsx|Please restart the app. The error has been reported.
+hardcoded-english|apps/electron/src/renderer/main.tsx|Something went wrong
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Copy Link
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Enter session name...
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Learn More
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Open in Browser
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Rename Session
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Session
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Share Online
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Stop Sharing
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|This session no longer exists
+hardcoded-english|apps/electron/src/renderer/pages/ChatPage.tsx|Update Share
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Any additional information you'd like to share with the AI assistant...
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Basic Info
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|City
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Country
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|e.g., English
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|e.g., New York
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|e.g., USA
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Language
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Location
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Name
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Notes
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Preferences
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Revert
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Timezone
+hardcoded-english|apps/electron/src/renderer/pages/PreferencesPage.tsx|Your name
+hardcoded-english|apps/electron/src/renderer/pages/ShortcutsPage.tsx|Shortcuts
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Ask to Edit
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Auto
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Auto-approved — no prompts for allowed tools
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Blocked — write tools blocked regardless
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Description
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Explore
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Instructions
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Location
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Metadata
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Name
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|No effect — all tools already auto-approved
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Permission Modes
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Required Sources
+hardcoded-english|apps/electron/src/renderer/pages/SkillInfoPage.tsx|Slug
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Connection
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Context and guidelines for the agent.
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Documentation
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Last Tested
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Operations exposed by this server.
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Permissions
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Source Disabled
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Tools
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|Type
+hardcoded-english|apps/electron/src/renderer/pages/SourceInfoPage.tsx|URL

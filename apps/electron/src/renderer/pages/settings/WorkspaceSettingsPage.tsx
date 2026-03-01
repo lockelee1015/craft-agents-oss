@@ -18,6 +18,7 @@ import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
 import { useAppShellContext } from '@/context/AppShellContext'
+import { useI18n } from '@/context/I18nContext'
 import { cn } from '@/lib/utils'
 import { routes } from '@/lib/navigate'
 import { Spinner } from '@craft-agent/ui'
@@ -45,6 +46,8 @@ export const meta: DetailsPageMeta = {
 // ============================================
 
 export default function WorkspaceSettingsPage() {
+  const { te } = useI18n()
+
   // Get active workspace from context
   const appShellContext = useAppShellContext()
   const activeWorkspaceId = appShellContext.activeWorkspaceId
@@ -292,7 +295,7 @@ export default function WorkspaceSettingsPage() {
 
       // Validate: at least 2 modes required
       if (newModes.length < 2) {
-        setModeCyclingError('At least 2 modes required')
+        setModeCyclingError(te('At least 2 modes required'))
         // Auto-dismiss after 2 seconds
         setTimeout(() => {
           setModeCyclingError(null)
@@ -309,16 +312,16 @@ export default function WorkspaceSettingsPage() {
         console.error('Failed to save mode cycling settings:', error)
       }
     },
-    [enabledModes, updateWorkspaceSetting]
+    [enabledModes, updateWorkspaceSetting, te]
   )
 
   // Show empty state if no workspace is active
   if (!activeWorkspaceId) {
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
+        <PanelHeader title={te('Workspace Settings')} actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">No workspace selected</p>
+          <p className="text-sm text-muted-foreground">{te('No workspace selected')}</p>
         </div>
       </div>
     )
@@ -328,7 +331,7 @@ export default function WorkspaceSettingsPage() {
   if (isLoadingWorkspace) {
     return (
       <div className="h-full flex flex-col">
-        <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
+        <PanelHeader title={te('Workspace Settings')} actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
         <div className="flex-1 flex items-center justify-center">
           <Spinner className="text-muted-foreground" />
         </div>
@@ -338,17 +341,17 @@ export default function WorkspaceSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Workspace Settings" actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
+      <PanelHeader title={te('Workspace Settings')} actions={<HeaderMenu route={routes.view.settings('workspace')} helpFeature="workspaces" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
           <div className="space-y-8">
             {/* Workspace Info */}
-            <SettingsSection title="Workspace Info">
+            <SettingsSection title={te('Workspace Info')}>
               <SettingsCard>
                 <SettingsRow
-                  label="Name"
-                  description={wsName || 'Untitled'}
+                  label={te('Name')}
+                  description={wsName || te('Untitled')}
                   action={
                     <button
                       type="button"
@@ -358,12 +361,12 @@ export default function WorkspaceSettingsPage() {
                       }}
                       className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors"
                     >
-                      Edit
+                      {te('Edit')}
                     </button>
                   }
                 />
                 <SettingsRow
-                  label="Icon"
+                  label={te('Icon')}
                   action={
                     <label className="cursor-pointer">
                       <input
@@ -374,7 +377,7 @@ export default function WorkspaceSettingsPage() {
                         disabled={isUploadingIcon}
                       />
                       <span className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors">
-                        {isUploadingIcon ? 'Uploading...' : 'Change'}
+                        {isUploadingIcon ? te('Uploading...') : te('Change')}
                       </span>
                     </label>
                   }
@@ -401,7 +404,7 @@ export default function WorkspaceSettingsPage() {
               <RenameDialog
                 open={renameDialogOpen}
                 onOpenChange={setRenameDialogOpen}
-                title="Rename workspace"
+                title={te('Rename workspace')}
                 value={wsNameEditing}
                 onValueChange={setWsNameEditing}
                 onSubmit={() => {
@@ -413,22 +416,22 @@ export default function WorkspaceSettingsPage() {
                   }
                   setRenameDialogOpen(false)
                 }}
-                placeholder="Enter workspace name..."
+                placeholder={te('Enter workspace name...')}
               />
             </SettingsSection>
 
             {/* Permissions */}
-            <SettingsSection title="Permissions">
+            <SettingsSection title={te('Permissions')}>
               <SettingsCard>
                 <SettingsMenuSelectRow
-                  label="Default mode"
-                  description="Control what AI can do"
+                  label={te('Default mode')}
+                  description={te('Control what AI can do')}
                   value={permissionMode}
                   onValueChange={(v) => handlePermissionModeChange(v as PermissionMode)}
                   options={[
-                    { value: 'safe', label: PERMISSION_MODE_CONFIG['safe'].shortName, description: 'Read-only, no changes allowed' },
-                    { value: 'ask', label: PERMISSION_MODE_CONFIG['ask'].shortName, description: 'Prompts before making edits' },
-                    { value: 'allow-all', label: PERMISSION_MODE_CONFIG['allow-all'].shortName, description: 'Full autonomous execution' },
+                    { value: 'safe', label: PERMISSION_MODE_CONFIG['safe'].shortName, description: te('Read-only, no changes allowed') },
+                    { value: 'ask', label: PERMISSION_MODE_CONFIG['ask'].shortName, description: te('Prompts before making edits') },
+                    { value: 'allow-all', label: PERMISSION_MODE_CONFIG['allow-all'].shortName, description: te('Full autonomous execution') },
                   ]}
                 />
               </SettingsCard>
@@ -436,8 +439,8 @@ export default function WorkspaceSettingsPage() {
 
             {/* Mode Cycling */}
             <SettingsSection
-              title="Mode Cycling"
-              description="Select which modes to cycle through with Shift+Tab"
+              title={te('Mode Cycling')}
+              description={te('Select which modes to cycle through with Shift+Tab')}
             >
               <SettingsCard>
                 {(['safe', 'ask', 'allow-all'] as const).map((m) => {
@@ -471,8 +474,8 @@ export default function WorkspaceSettingsPage() {
 
             {/* Default Sources */}
             <SettingsSection
-              title="Default Sources"
-              description="Sources auto-enabled for new sessions"
+              title={te('Default Sources')}
+              description={te('Sources auto-enabled for new sessions')}
             >
               {availableSources.length > 0 ? (
                 <SettingsCard>
@@ -492,16 +495,16 @@ export default function WorkspaceSettingsPage() {
                   ))}
                 </SettingsCard>
               ) : (
-                <p className="text-sm text-muted-foreground">No sources configured in this workspace.</p>
+                <p className="text-sm text-muted-foreground">{te('No sources configured in this workspace.')}</p>
               )}
             </SettingsSection>
 
             {/* Advanced */}
-            <SettingsSection title="Advanced">
+            <SettingsSection title={te('Advanced')}>
               <SettingsCard>
                 <SettingsRow
-                  label="Default Working Directory"
-                  description={workingDirectory || 'Not set (uses session folder)'}
+                  label={te('Default Working Directory')}
+                  description={workingDirectory || te('Not set (uses session folder)')}
                   action={
                     <div className="flex items-center gap-2">
                       {workingDirectory && (
@@ -510,7 +513,7 @@ export default function WorkspaceSettingsPage() {
                           onClick={handleClearWorkingDirectory}
                           className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors text-foreground/60 hover:text-foreground"
                         >
-                          Clear
+                          {te('Clear')}
                         </button>
                       )}
                       <button
@@ -518,14 +521,14 @@ export default function WorkspaceSettingsPage() {
                         onClick={handleChangeWorkingDirectory}
                         className="inline-flex items-center h-8 px-3 text-sm rounded-lg bg-background shadow-minimal hover:bg-foreground/[0.02] transition-colors"
                       >
-                        Change...
+                        {te('Change...')}
                       </button>
                     </div>
                   }
                 />
                 <SettingsToggle
-                  label="Local MCP Servers"
-                  description="Enable stdio subprocess servers"
+                  label={te('Local MCP Servers')}
+                  description={te('Enable stdio subprocess servers')}
                   checked={localMcpEnabled}
                   onCheckedChange={handleLocalMcpEnabledChange}
                 />

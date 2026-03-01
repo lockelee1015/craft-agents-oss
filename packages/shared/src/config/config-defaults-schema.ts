@@ -12,6 +12,7 @@ export interface ConfigDefaults {
   version: string;
   description: string;
   defaults: {
+    appLanguage: 'en' | 'zh-CN';
     notificationsEnabled: boolean;
     colorTheme: string;
     autoCapitalisation: boolean;

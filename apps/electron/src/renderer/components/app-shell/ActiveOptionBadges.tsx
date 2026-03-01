@@ -15,6 +15,7 @@ import { useDynamicStack } from '@/hooks/useDynamicStack'
 import type { SessionStatus } from '@/config/session-status-config'
 import { getState } from '@/config/session-status-config'
 import { SessionStatusMenu } from '@/components/ui/session-status-menu'
+import { useI18n } from '@/context/I18nContext'
 
 // ============================================================================
 // Permission Mode Icon Component
@@ -104,6 +105,7 @@ export function ActiveOptionBadges({
   onSessionStatusChange,
   className,
 }: ActiveOptionBadgesProps) {
+  const { te } = useI18n()
   // Resolve session label entries to their config objects + parsed values.
   // Entries may be bare IDs ("bug") or valued ("priority::3").
   // Preserves the raw value and original index for editing/removal.
@@ -179,7 +181,7 @@ export function ActiveOptionBadges({
           style={{ '--shadow-color': '147, 51, 234' } as React.CSSProperties}
         >
           <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Ultrathink
+            {te('Ultrathink')}
           </span>
           <X className="h-3 w-3 text-purple-500 opacity-60 hover:opacity-100 translate-y-px" />
         </button>
@@ -358,6 +360,7 @@ function StateBadge({
   sessionStatuses: SessionStatus[]
   onSessionStatusChange?: (stateId: string) => void
 }) {
+  const { te } = useI18n()
   const [open, setOpen] = React.useState(false)
 
   const handleSelect = React.useCallback((stateId: string) => {
@@ -390,7 +393,7 @@ function StateBadge({
           >
             {state.icon}
           </span>
-          <span className="whitespace-nowrap">{state.label}</span>
+          <span className="whitespace-nowrap">{te(state.label)}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-40" />
         </button>
       </PopoverTrigger>
@@ -422,6 +425,7 @@ interface PermissionModeDropdownProps {
 }
 
 function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onPermissionModeChange, onUltrathinkChange }: PermissionModeDropdownProps) {
+  const { te } = useI18n()
   const [open, setOpen] = React.useState(false)
   // Optimistic local state - updates immediately, syncs with prop
   const [optimisticMode, setOptimisticMode] = React.useState(permissionMode)
@@ -485,7 +489,7 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
           style={{ '--shadow-color': currentStyle.shadowVar } as React.CSSProperties}
         >
           <PermissionModeIcon mode={optimisticMode} className="h-3.5 w-3.5" />
-          <span>{config.displayName}</span>
+          <span>{te(config.displayName)}</span>
           <ChevronDown className="h-3.5 w-3.5 opacity-60" />
         </button>
       </PopoverTrigger>
@@ -510,4 +514,3 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
     </Popover>
   )
 }
-

@@ -17,6 +17,8 @@
     "lint:shared": "cd packages/shared && npx eslint .",
     "lint:ui": "cd packages/ui && npx eslint .",
     "lint": "bun run lint:electron && bun run lint:shared && bun run lint:ui",
+    "i18n:check": "bun run scripts/check-i18n.ts",
+    "i18n:baseline:update": "bun run scripts/check-i18n.ts --update-baseline",
     "link": "bun link",
     "electron:clean": "bun run scripts/electron-clean.ts",
     "electron:build:main": "bun run scripts/electron-build-main.ts",

@@ -18,6 +18,7 @@ import {
 import { DropdownMenuProvider } from '@/components/ui/menu-context'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
+import { useI18n } from '@/context/I18nContext'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
 import type { SettingsSubpage } from '../../../shared/types'
 import { SETTINGS_ITEMS } from '../../../shared/menu-schema'
@@ -37,17 +38,13 @@ interface SettingsNavigatorProps {
 
 interface SettingsItem {
   id: SettingsSubpage
-  label: string
   icon: React.ComponentType<{ className?: string }>
-  description: string
 }
 
 // Derive settings items from shared schema, using shared custom SVG icons
 const settingsItems: SettingsItem[] = SETTINGS_ITEMS.map((item) => ({
   id: item.id,
-  label: item.label,
   icon: SETTINGS_ICONS[item.id],
-  description: item.description,
 }))
 
 interface SettingsItemRowProps {
@@ -63,6 +60,7 @@ interface SettingsItemRowProps {
  */
 function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRowProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { t } = useI18n()
   const Icon = item.icon
 
   // Open settings page in a new window via deep link
@@ -112,10 +110,10 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
                 isSelected ? 'text-foreground' : 'text-foreground/80'
               )}
             >
-              {item.label}
+              {t(`settings.items.${item.id}.label`)}
             </span>
             <span className="text-xs text-foreground/60 line-clamp-1">
-              {item.description}
+              {t(`settings.items.${item.id}.description`)}
             </span>
           </div>
         </button>
@@ -137,7 +135,7 @@ function SettingsItemRow({ item, isSelected, isFirst, onSelect }: SettingsItemRo
                 <DropdownMenuProvider>
                   <StyledDropdownMenuItem onClick={handleOpenInNewWindow}>
                     <AppWindow className="h-3.5 w-3.5" />
-                    <span className="flex-1">Open in New Window</span>
+                    <span className="flex-1">{t('settings.navigator.openInNewWindow')}</span>
                   </StyledDropdownMenuItem>
                 </DropdownMenuProvider>
               </StyledDropdownMenuContent>

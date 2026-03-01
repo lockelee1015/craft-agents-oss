@@ -46,10 +46,11 @@ files:
 extraMetadata:
   main: dist/main.cjs
 
-# Auto-update: electron-updater fetches from this URL for update manifests (.yml files)
+# Auto-update: electron-updater fetches manifests/assets from GitHub Releases
 publish:
-  provider: generic
-  url: https://agents.craft.do/electron/latest
+  provider: github
+  owner: lockelee1015
+  repo: craft-agents-oss
 
 # Disable ASAR to avoid decompression overhead and click delays
 asar: false

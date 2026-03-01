@@ -53,6 +53,8 @@ export interface StoredConfig {
   activeSessionId: string | null;  // Currently active session (primary scope)
   // Notifications
   notificationsEnabled?: boolean;  // Desktop notifications for task completion (default: true)
+  // Internationalization
+  appLanguage?: 'en' | 'zh-CN';  // App UI language (default: 'en')
   // Appearance
   colorTheme?: string;  // ID of selected preset theme (e.g., 'dracula', 'nord'). Default: 'default'
   // Auto-update
@@ -200,6 +202,29 @@ export function saveConfig(config: StoredConfig): void {
 // - getAuthType/setAuthType -> derive from getDefaultLlmConnection()/getLlmConnection()
 // - getAnthropicBaseUrl/setAnthropicBaseUrl -> use connection.baseUrl
 // - getCustomModel/setCustomModel -> use connection.defaultModel
+
+/**
+ * Get app UI language.
+ * Defaults to value in config-defaults.json.
+ */
+export function getAppLanguage(): 'en' | 'zh-CN' {
+  const config = loadStoredConfig();
+  if (config?.appLanguage !== undefined) {
+    return config.appLanguage;
+  }
+  const defaults = loadConfigDefaults();
+  return defaults.defaults.appLanguage;
+}
+
+/**
+ * Set app UI language.
+ */
+export function setAppLanguage(language: 'en' | 'zh-CN'): void {
+  const config = loadStoredConfig();
+  if (!config) return;
+  config.appLanguage = language;
+  saveConfig(config);
+}
 
 
 /**

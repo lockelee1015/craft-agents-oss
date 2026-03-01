@@ -19,6 +19,8 @@ import type { PermissionMode } from '@craft-agent/shared/agent/modes';
 export type { PermissionMode };
 export { PERMISSION_MODE_CONFIG } from '@craft-agent/shared/agent/modes';
 
+export type AppLanguage = 'en' | 'zh-CN'
+
 // Import thinking level types
 import type { ThinkingLevel } from '@craft-agent/shared/agent/thinking-levels';
 export type { ThinkingLevel };
@@ -830,6 +832,10 @@ export const IPC_CHANNELS = {
   // Logo URL resolution (uses Node.js filesystem cache)
   LOGO_GET_URL: 'logo:getUrl',
 
+  // App language (global UI i18n)
+  APP_GET_LANGUAGE: 'app:getLanguage',
+  APP_SET_LANGUAGE: 'app:setLanguage',
+
   // Notifications
   NOTIFICATION_SHOW: 'notification:show',
   NOTIFICATION_NAVIGATE: 'notification:navigate',  // Broadcast: { workspaceId, sessionId }
@@ -1172,6 +1178,8 @@ export interface ElectronAPI {
   getLogoUrl(serviceUrl: string, provider?: string): Promise<string | null>
 
   // Notifications
+  getAppLanguage(): Promise<AppLanguage>
+  setAppLanguage(language: AppLanguage): Promise<void>
   showNotification(title: string, body: string, workspaceId: string, sessionId: string): Promise<void>
   getNotificationsEnabled(): Promise<boolean>
   setNotificationsEnabled(enabled: boolean): Promise<void>

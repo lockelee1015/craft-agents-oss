@@ -434,6 +434,10 @@ const api: ElectronAPI = {
   },
 
   // Notifications
+  getAppLanguage: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_GET_LANGUAGE) as Promise<import('../shared/types').AppLanguage>,
+  setAppLanguage: (language: import('../shared/types').AppLanguage) =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_SET_LANGUAGE, language),
   showNotification: (title: string, body: string, workspaceId: string, sessionId: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.NOTIFICATION_SHOW, title, body, workspaceId, sessionId),
   getNotificationsEnabled: () =>

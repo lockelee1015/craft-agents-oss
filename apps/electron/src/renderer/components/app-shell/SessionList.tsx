@@ -21,6 +21,7 @@ import { useFocusZone } from "@/hooks/keyboard"
 import { useEscapeInterrupt } from "@/context/EscapeInterruptContext"
 import { useNavigation, useNavigationState, routes, isSessionsNavigation } from "@/contexts/NavigationContext"
 import { useFocusContext } from "@/context/FocusContext"
+import { useI18n } from "@/context/I18nContext"
 import type { SessionMeta } from "@/atoms/sessions"
 import type { ViewConfig } from "@craft-agent/shared/views"
 import type { SessionStatusId, SessionStatus } from "@/config/session-status-config"
@@ -118,6 +119,7 @@ export function SessionList({
   statusFilter,
   labelFilterMap,
 }: SessionListProps) {
+  const { te } = useI18n()
   // --- Selection (atom-backed, shared with ChatDisplay + BatchActionPanel) ---
   const {
     select: selectSession,
@@ -588,8 +590,8 @@ export function SessionList({
       return (
         <EntityListEmptyScreen
           icon={<Archive />}
-          title="No archived sessions"
-          description="Sessions you archive will appear here. Archive sessions to keep your list tidy while preserving conversations."
+          title={te('No archived sessions')}
+          description={te('Sessions you archive will appear here. Archive sessions to keep your list tidy while preserving conversations.')}
           className="h-full"
         />
       )
@@ -598,8 +600,8 @@ export function SessionList({
     return (
       <EntityListEmptyScreen
         icon={<Inbox />}
-        title="No sessions yet"
-        description="Sessions with your agent appear here. Start one to get going."
+        title={te('No sessions yet')}
+        description={te('Sessions with your agent appear here. Start one to get going.')}
         className="h-full"
       >
         <button
@@ -611,7 +613,7 @@ export function SessionList({
           }}
           className="inline-flex items-center h-7 px-3 text-xs font-medium rounded-[8px] bg-background shadow-minimal hover:bg-foreground/[0.03] transition-colors"
         >
-          New Session
+          {te('New Session')}
         </button>
       </EntityListEmptyScreen>
     )
@@ -665,7 +667,7 @@ export function SessionList({
             )}
             {isSearchMode && matchingFilterItems.length === 0 && otherResultItems.length > 0 && (
               <div className="px-4 py-3 text-sm text-muted-foreground">
-                No results in current filter
+                {te('No results in current filter')}
               </div>
             )}
           </>
@@ -673,15 +675,15 @@ export function SessionList({
         emptyState={
           isSearchMode && !isSearchingContent ? (
             <div className="flex flex-col items-center justify-center py-12 px-4">
-              <p className="text-sm text-muted-foreground">No sessions found</p>
+              <p className="text-sm text-muted-foreground">{te('No sessions found')}</p>
               <p className="text-xs text-muted-foreground/60 mt-0.5">
-                Searched titles and message content
+                {te('Searched titles and message content')}
               </p>
               <button
                 onClick={() => onSearchChange?.('')}
                 className="text-xs text-foreground hover:underline mt-2"
               >
-                Clear search
+                {te('Clear search')}
               </button>
             </div>
           ) : undefined
@@ -697,7 +699,7 @@ export function SessionList({
         containerProps={{
           'data-focus-zone': 'navigator',
           role: 'listbox',
-          'aria-label': 'Sessions',
+          'aria-label': te('Sessions'),
         }}
         scrollAreaClassName="select-none mask-fade-top-short"
       />

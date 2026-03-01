@@ -4,6 +4,7 @@ import { Brain, Check } from 'lucide-react'
 import { Icon_Folder } from '@craft-agent/ui'
 import { cn } from '@/lib/utils'
 import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } from '@craft-agent/shared/agent/modes'
+import { useI18n } from '@/context/I18nContext'
 
 // ============================================================================
 // Types
@@ -163,10 +164,11 @@ function flattenSections(sections: SlashSection[]): (SlashCommand | SlashFolderI
 // ============================================================================
 
 function CommandItemContent({ command, isActive }: { command: SlashCommand; isActive: boolean }) {
+  const { te } = useI18n()
   return (
     <>
       <div className="shrink-0 text-muted-foreground">{command.icon}</div>
-      <div className="flex-1 min-w-0">{command.label}</div>
+      <div className="flex-1 min-w-0">{te(command.label)}</div>
       {isActive && (
         <div className="shrink-0 h-4 w-4 rounded-full bg-current flex items-center justify-center">
           <Check className="h-2.5 w-2.5 text-white dark:text-black" strokeWidth={3} />
@@ -201,6 +203,7 @@ export function SlashCommandMenu({
   filterPlaceholder = 'Search commands...',
   className,
 }: SlashCommandMenuProps) {
+  const { te } = useI18n()
   const [filter, setFilter] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -270,7 +273,7 @@ export function SlashCommandMenu({
             ref={inputRef}
             value={filter}
             onValueChange={setFilter}
-            placeholder={filterPlaceholder}
+            placeholder={te(filterPlaceholder)}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -278,7 +281,7 @@ export function SlashCommandMenu({
       <CommandPrimitive.List className={MENU_LIST_STYLE}>
         {allFilteredCommands.length === 0 ? (
           <CommandPrimitive.Empty className="py-4 text-center text-sm text-muted-foreground">
-            No commands found
+            {te('No commands found')}
           </CommandPrimitive.Empty>
         ) : filteredGroups ? (
           // Group-based rendering with smart separators
@@ -327,6 +330,7 @@ export function InlineSlashCommand({
   position,
   className,
 }: InlineSlashCommandProps) {
+  const { te } = useI18n()
   const menuRef = React.useRef<HTMLDivElement>(null)
   const listRef = React.useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
@@ -426,7 +430,7 @@ export function InlineSlashCommand({
           <React.Fragment key={section.id}>
             {/* Section header */}
             <div className={MENU_SECTION_HEADER}>
-              {section.label}
+              {te(section.label)}
             </div>
 
             {/* Section items */}
@@ -451,8 +455,8 @@ export function InlineSlashCommand({
                       <Icon_Folder className={MENU_ICON_SIZE} strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0 truncate">
-                      <span>{item.label}</span>
-                      <span className="text-muted-foreground ml-1.5">{item.description}</span>
+                      <span>{te(item.label)}</span>
+                      <span className="text-muted-foreground ml-1.5">{te(item.description)}</span>
                     </div>
                   </div>
                 )
@@ -482,7 +486,7 @@ export function InlineSlashCommand({
       {/* Always-visible footer hint for @ mentions */}
       <div className="h-px bg-border/50 mx-2" />
       <div className="px-3 py-2.5 select-none text-xs text-muted-foreground">
-        Use @ for skills and files
+        {te('Use @ for skills and files')}
       </div>
     </div>
   )

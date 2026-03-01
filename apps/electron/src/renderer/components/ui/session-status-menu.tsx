@@ -8,6 +8,7 @@ import {
   getStateIcon,
   getStateColor,
 } from '@/config/session-status-config'
+import { useI18n } from '@/context/I18nContext'
 
 // Re-export types for backwards compatibility
 export { type SessionStatusId, type SessionStatus, getStateIcon, getStateColor }
@@ -25,6 +26,7 @@ const MENU_ITEM_STYLE = 'flex cursor-pointer select-none items-center gap-3 roun
 // ============================================================================
 
 function StateItemContent({ state }: { state: SessionStatus }) {
+  const { te } = useI18n()
   // Only apply color styling if the icon is colorable (uses currentColor)
   // Emojis and images should render at full opacity with their own colors
   const applyColor = state.iconColorable
@@ -37,7 +39,7 @@ function StateItemContent({ state }: { state: SessionStatus }) {
       >
         {state.icon}
       </span>
-      <div className="flex-1 min-w-0">{state.label}</div>
+      <div className="flex-1 min-w-0">{te(state.label)}</div>
     </>
   )
 }
@@ -68,6 +70,7 @@ export function SessionStatusMenu({
   onUnarchive,
   className,
 }: SessionStatusMenuProps) {
+  const { te } = useI18n()
   const [filter, setFilter] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -92,20 +95,20 @@ export function SessionStatusMenu({
           ref={inputRef}
           value={filter}
           onValueChange={setFilter}
-          placeholder="Filter statuses..."
+          placeholder={te('Filter statuses...')}
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
         />
       </div>
       <CommandPrimitive.List className={MENU_LIST_STYLE}>
         <CommandPrimitive.Empty className="py-3 text-center text-sm text-muted-foreground">
-          No status found
+          {te('No status found')}
         </CommandPrimitive.Empty>
         {states.map((state) => {
           const isActive = activeState === state.id
           return (
             <CommandPrimitive.Item
               key={state.id}
-              value={state.label}
+              value={te(state.label)}
               onSelect={() => onSelect(state.id)}
               className={cn(
                 MENU_ITEM_STYLE,
@@ -133,7 +136,7 @@ export function SessionStatusMenu({
               <span className="shrink-0 flex items-center opacity-60">
                 {isArchived ? <ArchiveRestore className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
               </span>
-              <div className="flex-1 min-w-0">{isArchived ? 'Unarchive' : 'Archive'}</div>
+              <div className="flex-1 min-w-0">{isArchived ? te('Unarchive') : te('Archive')}</div>
             </CommandPrimitive.Item>
           </>
         )}

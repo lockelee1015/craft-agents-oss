@@ -3110,6 +3110,18 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
   // Notifications and Badge
   // ============================================================
 
+  // Get app UI language
+  ipcMain.handle(IPC_CHANNELS.APP_GET_LANGUAGE, async () => {
+    const { getAppLanguage } = await import('@craft-agent/shared/config/storage')
+    return getAppLanguage()
+  })
+
+  // Set app UI language
+  ipcMain.handle(IPC_CHANNELS.APP_SET_LANGUAGE, async (_event, language: 'en' | 'zh-CN') => {
+    const { setAppLanguage } = await import('@craft-agent/shared/config/storage')
+    setAppLanguage(language)
+  })
+
   // Show a notification
   ipcMain.handle(IPC_CHANNELS.NOTIFICATION_SHOW, async (_event, title: string, body: string, workspaceId: string, sessionId: string) => {
     const { showNotification } = await import('./notifications')

@@ -6,6 +6,7 @@ import { captureConsoleIntegration } from '@sentry/react'
 import { Provider as JotaiProvider, useAtomValue } from 'jotai'
 import App from './App'
 import { ThemeProvider } from './context/ThemeContext'
+import { I18nProvider } from './context/I18nContext'
 import { windowWorkspaceIdAtom } from './atoms/sessions'
 import { Toaster } from '@/components/ui/sonner'
 import './index.css'
@@ -94,10 +95,12 @@ function Root() {
   const workspaceId = useAtomValue(windowWorkspaceIdAtom)
 
   return (
-    <ThemeProvider activeWorkspaceId={workspaceId}>
-      <App />
-      <Toaster />
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider activeWorkspaceId={workspaceId}>
+        <App />
+        <Toaster />
+      </ThemeProvider>
+    </I18nProvider>
   )
 }
 

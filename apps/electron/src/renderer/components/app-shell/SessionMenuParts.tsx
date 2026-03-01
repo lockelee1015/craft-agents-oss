@@ -6,6 +6,7 @@ import type { SessionStatusId } from '@/config/session-status-config'
 import type { SessionStatus } from '@/config/session-status-config'
 import type { LabelConfig } from '@craft-agent/shared/labels'
 import { LabelIcon } from '@/components/ui/label-icon'
+import { useI18n } from '@/context/I18nContext'
 
 export interface ShareMenuItemsProps {
   sessionId: string
@@ -81,6 +82,7 @@ export function StatusMenuItems({
   onSelect,
   menu,
 }: StatusMenuItemsProps) {
+  const { te } = useI18n()
   const { MenuItem } = menu
 
   return (
@@ -99,7 +101,7 @@ export function StatusMenuItems({
             <span style={applyColor ? { color: state.resolvedColor } : undefined}>
               {bareIcon}
             </span>
-            <span className="flex-1">{state.label}</span>
+            <span className="flex-1">{te(state.label)}</span>
           </MenuItem>
         )
       })}

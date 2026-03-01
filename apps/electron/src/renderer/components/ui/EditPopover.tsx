@@ -18,6 +18,7 @@ import { usePlatform } from '@craft-agent/ui'
 import type { ContentBadge, Session, CreateSessionOptions } from '../../../shared/types'
 import { useActiveWorkspace, useAppShellContext, useSession } from '@/context/AppShellContext'
 import { useEscapeInterrupt } from '@/context/EscapeInterruptContext'
+import { useI18n } from '@/context/I18nContext'
 import { ChatDisplay } from '../app-shell/ChatDisplay'
 
 /** Rotating placeholders for compact mode input - short, action-oriented */
@@ -661,17 +662,24 @@ export function EditPopover({
   defaultValue = '',
   inlineExecution = false,
 }: EditPopoverProps) {
+  const { te } = useI18n()
   const { onOpenFile, onOpenUrl } = usePlatform()
   const workspace = useActiveWorkspace()
+
+  const compactPlaceholders = useMemo(
+    () => COMPACT_PLACEHOLDERS.map(text => te(text)),
+    [te]
+  )
 
   // Build placeholder: for inline execution use rotating array, otherwise build descriptive string
   // overridePlaceholder allows contexts like add-source/add-skill to say "add" instead of "change"
   const placeholder = inlineExecution
-    ? COMPACT_PLACEHOLDERS
+    ? compactPlaceholders
     : (() => {
-        const basePlaceholder = overridePlaceholder ?? "Describe what you'd like to change..."
+        const basePlaceholder = te(overridePlaceholder ?? "Describe what you'd like to change...")
+        const localizedExample = example ? te(example) : undefined
         return example
-          ? `${basePlaceholder.replace(/\.{3}$/, '')}, e.g., "${example}"`
+          ? `${basePlaceholder.replace(/\.{3}$/, '')}, ${te('e.g.,')} "${localizedExample}"`
           : basePlaceholder
       })()
 

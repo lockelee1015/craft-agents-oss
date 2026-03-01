@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
 import { Loader2 } from 'lucide-react'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
+import { useI18n } from '@/context/I18nContext'
 import { type PermissionsConfigFile } from '@craft-agent/shared/agent/modes'
 import {
   PermissionsDataTable,
@@ -130,6 +131,7 @@ function buildCustomPermissionsData(config: PermissionsConfigFile): PermissionRo
 }
 
 export default function PermissionsSettingsPage() {
+  const { te } = useI18n()
   const { activeWorkspaceId } = useAppShellContext()
   const activeWorkspace = useActiveWorkspace()
 
@@ -193,7 +195,7 @@ export default function PermissionsSettingsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <PanelHeader title="Permissions" actions={<HeaderMenu route={routes.view.settings('permissions')} helpFeature="permissions" />} />
+      <PanelHeader title={te('Permissions')} actions={<HeaderMenu route={routes.view.settings('permissions')} helpFeature="permissions" />} />
       <div className="flex-1 min-h-0 mask-fade-y">
         <ScrollArea className="h-full">
           <div className="px-5 py-7 max-w-3xl mx-auto">
@@ -205,14 +207,18 @@ export default function PermissionsSettingsPage() {
               ) : (
                 <>
                   {/* About Section */}
-                  <SettingsSection title="About Permissions">
+                  <SettingsSection title={te('About Permissions')}>
                     <SettingsCard className="px-4 py-3.5">
                       <div className="text-sm text-muted-foreground leading-relaxed space-y-1.5">
                         <p>
-                          Permissions control how much autonomy your agent has. In <span className="text-foreground/80 font-medium">Explore</span> mode, the agent can only read and research — perfect for understanding a problem before committing to changes. When you're ready, switch to <span className="text-foreground/80 font-medium">Execute</span> mode to let the agent implement the plan autonomously.
+                          {te('Permissions control how much autonomy your agent has. In ')}
+                          <span className="text-foreground/80 font-medium">{te('Explore')}</span>
+                          {te(' mode, the agent can only read and research — perfect for understanding a problem before committing to changes. When you\'re ready, switch to ')}
+                          <span className="text-foreground/80 font-medium">{te('Execute')}</span>
+                          {te(' mode to let the agent implement the plan autonomously.')}
                         </p>
                         <p>
-                          A good workflow: start in Explore to let the agent investigate, review the proposed plan, then execute with confidence.
+                          {te('A good workflow: start in Explore to let the agent investigate, review the proposed plan, then execute with confidence.')}
                         </p>
                         <p>
                           <button
@@ -220,7 +226,7 @@ export default function PermissionsSettingsPage() {
                             onClick={() => window.electronAPI?.openUrl(getDocUrl('permissions'))}
                             className="text-foreground/70 hover:text-foreground underline underline-offset-2"
                           >
-                            Learn more
+                            {te('Learn more')}
                           </button>
                         </p>
                       </div>
@@ -229,8 +235,8 @@ export default function PermissionsSettingsPage() {
 
                   {/* Default Permissions Section */}
                   <SettingsSection
-                    title="Default Permissions"
-                    description="App-level patterns allowed in Explore mode. Commands not on this list are blocked."
+                    title={te('Default Permissions')}
+                    description={te('App-level patterns allowed in Explore mode. Commands not on this list are blocked.')}
                     action={
                       // EditPopover for AI-assisted default permissions editing
                       defaultPermissionsPath ? (
@@ -238,7 +244,7 @@ export default function PermissionsSettingsPage() {
                           trigger={<EditButton />}
                           {...getEditConfig('default-permissions', defaultPermissionsPath)}
                           secondaryAction={{
-                            label: 'Edit File',
+                            label: te('Edit File'),
                             filePath: defaultPermissionsPath,
                           }}
                         />
@@ -252,13 +258,13 @@ export default function PermissionsSettingsPage() {
                           searchable
                           maxHeight={350}
                           fullscreen
-                          fullscreenTitle="Default Permissions"
+                          fullscreenTitle={te('Default Permissions')}
                         />
                       ) : (
                         <div className="p-8 text-center text-muted-foreground">
-                          <p className="text-sm">No default permissions found.</p>
+                          <p className="text-sm">{te('No default permissions found.')}</p>
                           <p className="text-xs mt-1 text-foreground/40">
-                            Default permissions should be at <code className="bg-foreground/5 px-1 rounded">~/.craft-agent/permissions/default.json</code>
+                            {te('Default permissions should be at ')}<code className="bg-foreground/5 px-1 rounded">~/.craft-agent/permissions/default.json</code>
                           </p>
                         </div>
                       )}
@@ -267,8 +273,8 @@ export default function PermissionsSettingsPage() {
 
                   {/* Custom Permissions Section */}
                   <SettingsSection
-                    title="Workspace Customizations"
-                    description="Workspace-level patterns that extend the app defaults above."
+                    title={te('Workspace Customizations')}
+                    description={te('Workspace-level patterns that extend the app defaults above.')}
                     action={
                       (() => {
                         // Get centralized edit config - all strings defined in EditPopover.tsx
@@ -279,7 +285,7 @@ export default function PermissionsSettingsPage() {
                             example={example}
                             context={context}
                             secondaryAction={activeWorkspace ? {
-                              label: 'Edit File',
+                              label: te('Edit File'),
                               filePath: `${activeWorkspace.rootPath}/permissions.json`,
                             } : undefined}
                           />
@@ -294,13 +300,13 @@ export default function PermissionsSettingsPage() {
                           searchable
                           maxHeight={350}
                           fullscreen
-                          fullscreenTitle="Workspace Customizations"
+                          fullscreenTitle={te('Workspace Customizations')}
                         />
                       ) : (
                         <div className="p-8 text-center text-muted-foreground">
-                          <p className="text-sm">No custom permissions configured.</p>
+                          <p className="text-sm">{te('No custom permissions configured.')}</p>
                           <p className="text-xs mt-1 text-foreground/40">
-                            Create a <code className="bg-foreground/5 px-1 rounded">permissions.json</code> file in your workspace to add custom rules.
+                            {te('Create a ')}<code className="bg-foreground/5 px-1 rounded">permissions.json</code>{te(' file in your workspace to add custom rules.')}
                           </p>
                         </div>
                       )}

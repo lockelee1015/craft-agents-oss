@@ -67,6 +67,7 @@ import type { PermissionMode } from '@craft-agent/shared/agent/modes'
 import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
 import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
 import { useEscapeInterrupt } from '@/context/EscapeInterruptContext'
+import { useI18n } from '@/context/I18nContext'
 import { hasOpenOverlay } from '@/lib/overlay-detection'
 import { EscapeInterruptOverlay } from './EscapeInterruptOverlay'
 
@@ -252,6 +253,7 @@ export function FreeFormInput({
   onConnectionChange,
   connectionUnavailable = false,
 }: FreeFormInputProps) {
+  const { te } = useI18n()
   // Read connection default model, connections, and workspace info from context.
   // Uses optional variant so playground (no provider) doesn't crash.
   const appShellCtx = useOptionalAppShellContext()
@@ -363,9 +365,14 @@ export function FreeFormInput({
     return extractWorkspaceSlugFromPath(workspaceRootPath, workspaceId ?? '')
   }, [workspaceRootPath, workspaceId])
 
+  const localizedPlaceholder = React.useMemo(
+    () => Array.isArray(placeholder) ? placeholder.map(text => te(text)) : te(placeholder),
+    [placeholder, te]
+  )
+
   // Shuffle placeholder order once per mount so each session feels fresh
   const shuffledPlaceholder = React.useMemo(
-    () => Array.isArray(placeholder) ? shuffleArray(placeholder) : placeholder,
+    () => Array.isArray(localizedPlaceholder) ? shuffleArray(localizedPlaceholder) : localizedPlaceholder,
     [] // eslint-disable-line react-hooks/exhaustive-deps -- intentionally shuffle only on mount
   )
 
@@ -1434,15 +1441,15 @@ export function FreeFormInput({
             // Show count ("1 file" / "X files") instead of filename for cleaner UI
             label={attachments.length > 0
               ? attachments.length === 1
-                ? "1 file"
-                : `${attachments.length} files`
-              : "Attach Files"
+                ? te('1 file')
+                : `${attachments.length} ${te('files')}`
+              : te('Attach Files')
             }
             isExpanded={isEmptySession}
             hasSelection={attachments.length > 0}
             showChevron={false}
             onClick={handleAttachClick}
-            tooltip="Attach files"
+            tooltip={te('Attach files')}
             disabled={disabled}
           />
 
@@ -1487,12 +1494,12 @@ export function FreeFormInput({
                 }
                 label={
                   optimisticSourceSlugs.length === 0
-                    ? "Choose Sources"
+                    ? te('Choose Sources')
                     : (() => {
                         const enabledSources = sources.filter(s => optimisticSourceSlugs.includes(s.config.slug))
                         if (enabledSources.length === 1) return enabledSources[0].config.name
                         if (enabledSources.length === 2) return enabledSources.map(s => s.config.name).join(', ')
-                        return `${enabledSources.length} sources`
+                        return `${enabledSources.length} ${te('sources')}`
                       })()
                 }
                 isExpanded={isEmptySession}
@@ -1516,7 +1523,7 @@ export function FreeFormInput({
                   }
                   setSourceDropdownOpen(!sourceDropdownOpen)
                 }}
-                tooltip="Sources"
+                tooltip={te('Sources')}
               />
               {sourceDropdownOpen && sourceDropdownPosition && ReactDOM.createPortal(
                 <>
@@ -1537,9 +1544,9 @@ export function FreeFormInput({
                   >
                     {sources.length === 0 ? (
                       <div className="text-xs text-muted-foreground p-3 select-none">
-                        No sources configured.
+                        {te('No sources configured.')}
                         <br />
-                        Add sources in Settings.
+                        {te('Add sources in Settings.')}
                       </div>
                     ) : (
                       <CommandPrimitive
@@ -1551,7 +1558,7 @@ export function FreeFormInput({
                             ref={sourceFilterInputRef}
                             value={sourceFilter}
                             onValueChange={setSourceFilter}
-                            placeholder="Search sources..."
+                            placeholder={te('Search sources...')}
                             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground placeholder:select-none"
                           />
                         </div>
@@ -1653,7 +1660,7 @@ export function FreeFormInput({
                 </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent side="top">
-Model
+                {te('Model')}
               </TooltipContent>
             </Tooltip>
             <StyledDropdownMenuContent side="top" align="end" sideOffset={8} className="min-w-[260px]">
@@ -1661,9 +1668,9 @@ Model
               {connectionUnavailable ? (
                 <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
                   <AlertCircle className="h-8 w-8 text-destructive mb-2" />
-                  <div className="font-medium text-sm mb-1">Connection Unavailable</div>
+                  <div className="font-medium text-sm mb-1">{te('Connection Unavailable')}</div>
                   <div className="text-xs text-muted-foreground">
-                    The connection used by this session has been removed. Create a new session to continue.
+                    {te('The connection used by this session has been removed. Create a new session to continue.')}
                   </div>
                 </div>
               ) : connectionDefaultModel ? (
@@ -1673,7 +1680,7 @@ Model
                 >
                   <div className="text-left">
                     <div className="font-medium text-sm">{connectionDefaultModel}</div>
-                    <div className="text-xs text-muted-foreground">Connection default</div>
+                    <div className="text-xs text-muted-foreground">{te('Connection default')}</div>
                   </div>
                   <Check className="h-3 w-3 text-foreground shrink-0 ml-3" />
                 </StyledDropdownMenuItem>
@@ -1704,7 +1711,7 @@ Model
                                 {isCurrentConnection && <Check className="h-3 w-3 text-foreground" />}
                               </div>
                               {!isAuthenticated && (
-                                <div className="text-xs text-muted-foreground">Not authenticated</div>
+                                <div className="text-xs text-muted-foreground">{te('Not authenticated')}</div>
                               )}
                             </div>
                           </StyledDropdownMenuSubTrigger>
@@ -1752,7 +1759,7 @@ Model
                   {!isEmptySession && currentConnectionDetails && llmConnections.length > 1 && (
                     <>
                       <div className="flex items-center gap-2 px-2 py-1.5 text-xs select-none text-muted-foreground">
-                        <span>Using {currentConnectionDetails.name}</span>
+                        <span>{te('Using')} {currentConnectionDetails.name}</span>
                       </div>
                       <StyledDropdownMenuSeparator className="my-1" />
                     </>
@@ -1793,8 +1800,8 @@ Model
                   <DropdownMenuSub>
                     <StyledDropdownMenuSubTrigger disabled={thinkingDisabled} className={cn("flex items-center justify-between px-2 py-2 rounded-lg", thinkingDisabled && "opacity-50 cursor-not-allowed")}>
                       <div className="text-left flex-1">
-                        <div className="font-medium text-sm">{getThinkingLevelName(thinkingLevel)}</div>
-                        <div className="text-xs text-muted-foreground">{thinkingDisabled ? 'Not supported by this model' : 'Extended reasoning depth'}</div>
+                        <div className="font-medium text-sm">{te(getThinkingLevelName(thinkingLevel))}</div>
+                        <div className="text-xs text-muted-foreground">{thinkingDisabled ? te('Not supported by this model') : te('Extended reasoning depth')}</div>
                       </div>
                     </StyledDropdownMenuSubTrigger>
                     <StyledDropdownMenuSubContent className="min-w-[220px]">
@@ -1807,8 +1814,8 @@ Model
                             className="flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer"
                           >
                             <div className="text-left">
-                              <div className="font-medium text-sm">{name}</div>
-                              <div className="text-xs text-muted-foreground">{description}</div>
+                              <div className="font-medium text-sm">{te(name)}</div>
+                              <div className="text-xs text-muted-foreground">{te(description)}</div>
                             </div>
                             {isSelected && (
                               <Check className="h-3 w-3 text-foreground shrink-0 ml-3" />
@@ -1827,12 +1834,12 @@ Model
                   <StyledDropdownMenuSeparator className="my-1" />
                   <div className="px-2 py-1.5 select-none">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Context</span>
+                      <span>{te('Context')}</span>
                       <span className="flex items-center gap-1.5">
                         {contextStatus.isCompacting && (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         )}
-                        {formatTokenCount(contextStatus.inputTokens)} tokens used
+                        {formatTokenCount(contextStatus.inputTokens)} {te('tokens used')}
                       </span>
                     </div>
                   </div>
@@ -1966,6 +1973,7 @@ function WorkingDirectoryBadge({
   sessionFolderPath?: string
   isEmptySession?: boolean
 }) {
+  const { te } = useI18n()
   const [recentDirs, setRecentDirs] = React.useState<string[]>([])
   const [popoverOpen, setPopoverOpen] = React.useState(false)
   const [homeDir, setHomeDir] = React.useState<string>('')
@@ -2042,7 +2050,7 @@ function WorkingDirectoryBadge({
 
   // Determine label - "Work in Folder" if not set or at session root, otherwise folder name
   const hasFolder = !!workingDirectory && workingDirectory !== sessionFolderPath
-  const folderName = hasFolder ? (getPathBasename(workingDirectory) || 'Folder') : 'Work in Folder'
+  const folderName = hasFolder ? (getPathBasename(workingDirectory) || te('Folder')) : te('Work in Folder')
 
   // Show reset option when a folder is selected and it differs from session folder
   const showReset = hasFolder && sessionFolderPath && sessionFolderPath !== workingDirectory
@@ -2066,11 +2074,11 @@ function WorkingDirectoryBadge({
             tooltip={
               hasFolder ? (
                 <span className="flex flex-col gap-0.5">
-                  <span className="font-medium">Working directory</span>
+                  <span className="font-medium">{te('Working directory')}</span>
                   <span className="text-xs opacity-70">{formatPathForDisplay(workingDirectory, homeDir)}</span>
-                  {gitBranch && <span className="text-xs opacity-70">on {gitBranch}</span>}
+                  {gitBranch && <span className="text-xs opacity-70">{te('Branch')}: {gitBranch}</span>}
                 </span>
-              ) : "Choose working directory"
+              ) : te('Choose working directory')
             }
           />
         </span>
@@ -2084,7 +2092,7 @@ function WorkingDirectoryBadge({
                 ref={inputRef}
                 value={filter}
                 onValueChange={setFilter}
-                placeholder="Filter folders..."
+                placeholder={te('Filter folders...')}
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50 placeholder:select-none"
               />
             </div>
@@ -2134,7 +2142,7 @@ function WorkingDirectoryBadge({
             {/* Empty state when filtering */}
             {showFilter && (
               <CommandPrimitive.Empty className="py-3 text-center text-sm text-muted-foreground">
-                No folders found
+                {te('No folders found')}
               </CommandPrimitive.Empty>
             )}
           </CommandPrimitive.List>
@@ -2146,7 +2154,7 @@ function WorkingDirectoryBadge({
               onClick={handleChooseFolder}
               className={cn(MENU_ITEM_STYLE, 'w-full hover:bg-foreground/5')}
             >
-              Choose Folder...
+              {te('Choose Folder...')}
             </button>
             {showReset && (
               <button
@@ -2154,7 +2162,7 @@ function WorkingDirectoryBadge({
                 onClick={handleReset}
                 className={cn(MENU_ITEM_STYLE, 'w-full hover:bg-foreground/5')}
               >
-                Reset
+                {te('Reset')}
               </button>
             )}
           </div>
