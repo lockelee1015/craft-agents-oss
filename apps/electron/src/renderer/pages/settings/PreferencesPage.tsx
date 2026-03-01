@@ -199,12 +199,12 @@ export default function PreferencesPage() {
           {/* Basic Info */}
             <SettingsSection
             title={te('Basic Info')}
-            description={te('Help Craft Agent personalize responses to you.')}
+            description={te('Help MoonCake personalize responses to you.')}
           >
             <SettingsCard divided>
               <SettingsInput
                 label={te('Name')}
-                description={te('How Craft Agent should address you.')}
+                description={te('How MoonCake should address you.')}
                 value={formState.name}
                 onChange={(v) => updateField('name', v)}
                 placeholder={te('Your name')}
@@ -220,7 +220,7 @@ export default function PreferencesPage() {
               />
               <SettingsInput
                 label={te('Language')}
-                description={te("Preferred language for Craft Agent's responses.")}
+                description={te("Preferred language for MoonCake's responses.")}
                 value={formState.language}
                 onChange={(v) => updateField('language', v)}
                 placeholder={te('e.g., English')}
@@ -257,7 +257,7 @@ export default function PreferencesPage() {
           {/* Notes */}
             <SettingsSection
             title={te('Notes')}
-            description={te('Free-form context that helps Craft Agent understand your preferences.')}
+            description={te('Free-form context that helps MoonCake understand your preferences.')}
             action={
               // EditPopover for AI-assisted notes editing with "Edit File" as secondary action
               preferencesPath ? (
@@ -276,7 +276,7 @@ export default function PreferencesPage() {
               <SettingsTextarea
                 value={formState.notes}
                 onChange={(v) => updateField('notes', v)}
-                placeholder={te("Any additional context you'd like Craft Agent to know...")}
+                placeholder={te("Any additional context you'd like MoonCake to know...")}
                 rows={5}
                 inCard
               />

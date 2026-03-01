@@ -69,7 +69,7 @@ export function ProviderSelectStep({ onSelect }: ProviderSelectStepProps) {
           <CraftAgentsSymbol className="size-10 text-accent" />
         </div>
       }
-      title={t(locale, { en: 'Welcome to Craft Agents', zh: '欢迎使用 Craft Agents' })}
+      title={t(locale, { en: 'Welcome to MoonCake', zh: '欢迎使用 MoonCake' })}
       description={t(locale, {
         en: 'Choose an agent runtime to continue.',
         zh: '请选择要使用的 Agent 运行时。',

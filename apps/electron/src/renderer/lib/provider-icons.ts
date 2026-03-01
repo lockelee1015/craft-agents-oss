@@ -49,8 +49,8 @@ const providerDisplayNames: Record<string, string> = {
   copilot: 'GitHub Copilot',
   ollama: 'Ollama',
   openrouter: 'OpenRouter',
-  pi: 'Craft Agents Backend',
-  pi_compat: 'Craft Agents Backend',
+  pi: 'MoonCake Backend',
+  pi_compat: 'MoonCake Backend',
   vercel: 'Vercel',
 }
 

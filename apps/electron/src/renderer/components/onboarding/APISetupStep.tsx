@@ -9,7 +9,7 @@ export type ProviderSegment = 'anthropic' | 'pi'
 
 const SEGMENT_LABELS: Record<ProviderSegment, string> = {
   anthropic: 'Claude',
-  pi: 'Craft Agents Backend',
+  pi: 'MoonCake Backend',
 }
 
 const BetaBadge = () => (
@@ -20,7 +20,7 @@ const BetaBadge = () => (
 
 const SEGMENT_DESCRIPTIONS: Record<ProviderSegment, React.ReactNode> = {
   anthropic: <>Use Claude Agent SDK as the main agent.<br />Configure with your Claude subscription or API key.</>,
-  pi: <>Use Craft Agents Backend as the main agent.<BetaBadge /><br />Configure with your API key, OAuth subscription, or custom endpoint.</>,
+  pi: <>Use MoonCake Backend as the main agent.<BetaBadge /><br />Configure with your API key, OAuth subscription, or custom endpoint.</>,
 }
 
 /**
@@ -83,7 +83,7 @@ const API_SETUP_OPTIONS: ApiSetupOption[] = [
   {
     id: 'pi_chatgpt_oauth',
     name: 'ChatGPT Plus',
-    description: 'Use your ChatGPT subscription with Craft Agents Backend.',
+    description: 'Use your ChatGPT subscription with MoonCake Backend.',
     icon: <Cpu className="size-4" />,
     providerType: 'pi',
   },

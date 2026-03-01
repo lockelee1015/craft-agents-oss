@@ -215,10 +215,10 @@ function ConnectionRow({ connection, isLastConnection, onRenameClick, onDelete, 
         const piLabel = !isSubscription && connection.piAuthProvider
           ? PI_AUTH_PROVIDER_LABELS[connection.piAuthProvider]
           : null
-        parts.push(piLabel ?? te('Craft Agents Backend'))
+        parts.push(piLabel ?? te('MoonCake Backend'))
         break
       }
-      case 'pi_compat': parts.push(te('Craft Agents Backend Compatible')); break
+      case 'pi_compat': parts.push(te('MoonCake Backend Compatible')); break
       default: parts.push(provider || te('Unknown'))
     }
 
@@ -473,7 +473,7 @@ function WorkspaceOverrideCard({ workspace, llmConnections, onSettingsChange, te
                     value: conn.slug,
                     label: conn.name,
                     description: conn.providerType === 'anthropic' ? te('Anthropic API') :
-                                 conn.providerType === 'pi' ? te('Craft Agents Backend') :
+                                 conn.providerType === 'pi' ? te('MoonCake Backend') :
                                  conn.providerType || te('Unknown'),
                   })),
                 ]}
@@ -843,8 +843,8 @@ export default function AiSettingsPage() {
                       description: conn.providerType === 'anthropic' ? te('Anthropic API') :
                                    conn.providerType === 'bedrock' ? te('AWS Bedrock') :
                                    conn.providerType === 'vertex' ? te('Google Vertex') :
-                                   conn.providerType === 'pi' ? te('Craft Agents Backend') :
-                                   conn.providerType === 'pi_compat' ? te('Craft Agents Backend Compatible') :
+                                   conn.providerType === 'pi' ? te('MoonCake Backend') :
+                                   conn.providerType === 'pi_compat' ? te('MoonCake Backend Compatible') :
                                    conn.providerType || te('Unknown'),
                     }))}
                   />

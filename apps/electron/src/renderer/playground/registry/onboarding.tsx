@@ -105,7 +105,7 @@ export const onboardingComponents: ComponentEntry[] = [
           type: 'select',
           options: [
             { label: 'Anthropic', value: 'anthropic' },
-            { label: 'Craft Agents Backend', value: 'pi' },
+            { label: 'MoonCake Backend', value: 'pi' },
           ],
         },
         defaultValue: 'anthropic',
