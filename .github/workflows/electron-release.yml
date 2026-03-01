@@ -64,6 +64,11 @@ jobs:
             echo "Apple notarization API key not fully configured; continuing without APPLE_API_KEY."
           fi
 
+      - name: Normalize CSC_NAME
+        run: |
+          CLEAN_NAME="${CSC_NAME#Developer ID Application: }"
+          echo "CSC_NAME=$CLEAN_NAME" >> "$GITHUB_ENV"
+
       - name: Publish To GitHub Releases
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
