@@ -56,5 +56,4 @@ jobs:
         run: bun run electron:build
 
       - name: Publish To GitHub Releases
-        run: npx electron-builder --config apps/electron/electron-builder.yml --project apps/electron ${{ matrix.publish_args }} --publish always
-
+        run: npx electron-builder --config electron-builder.yml --project apps/electron ${{ matrix.publish_args }} --publish always
