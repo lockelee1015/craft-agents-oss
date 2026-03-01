@@ -14,6 +14,17 @@ const VARIANTS_SIDEBAR_KEY = 'playground-variants-sidebar-open'
 export function PlaygroundApp() {
   const categories = React.useMemo(() => getCategories(), [])
   const [selectedId, setSelectedId] = React.useState<string | null>(() => {
+    // Priority 1: URL query param (?component=<id>) for direct links
+    try {
+      const queryId = new URLSearchParams(window.location.search).get('component')
+      if (queryId) {
+        const component = getComponentById(queryId)
+        if (component) return queryId
+      }
+    } catch {
+      // Ignore URL parse errors
+    }
+
     // Try to restore from localStorage
     try {
       const stored = localStorage.getItem(SELECTED_STORAGE_KEY)

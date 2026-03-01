@@ -16,6 +16,7 @@ import { editPopoverComponents } from './edit-popover'
 import { actionCardsComponents } from './action-cards'
 import { automationComponents } from './automations'
 import { entityListComponents } from './entity-lists'
+import { officePreviewComponents } from './office-previews'
 
 export * from './types'
 
@@ -38,6 +39,7 @@ export const componentRegistry: ComponentEntry[] = [
   ...editPopoverComponents,
   ...automationComponents,
   ...entityListComponents,
+  ...officePreviewComponents,
 ]
 
 export function getCategories(): CategoryGroup[] {

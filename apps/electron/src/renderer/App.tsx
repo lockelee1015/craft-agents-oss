@@ -52,6 +52,7 @@ import {
   DocumentFormattedMarkdownOverlay,
   JSONPreviewOverlay,
 } from '@craft-agent/ui'
+import { XlsxFortunePreviewOverlay } from '@/components/files/XlsxFortunePreviewOverlay'
 import { useLinkInterceptor, type FilePreviewState } from '@/hooks/useLinkInterceptor'
 import { getFileManagerName } from '@/lib/platform'
 import { ActionRegistryProvider } from '@/actions'
@@ -1373,7 +1374,7 @@ export default function App() {
     onOpenFileExternal: linkInterceptor.openFileExternal,
     // Read file contents as UTF-8 string (used by datatable/spreadsheet src field)
     onReadFile: (path: string) => window.electronAPI.readFile(path),
-    // Read file as binary Uint8Array (used by PDF preview blocks)
+    // Read file as binary Uint8Array (used by PDF and spreadsheet preview blocks)
     onReadFileBinary: (path: string) => window.electronAPI.readFileBinary(path),
     // Reveal a file in the system file manager (Finder on macOS, Explorer on Windows, etc.)
     onRevealInFinder: (path: string) => {
@@ -1519,6 +1520,7 @@ function WindowCloseHandler() {
  * Handles all preview types from the link interceptor:
  * - image → ImagePreviewOverlay (binary, loaded via data URL)
  * - pdf → PDFPreviewOverlay (binary, embedded via Chromium viewer)
+ * - spreadsheet (.xlsx) → XlsxFortunePreviewOverlay (FortuneSheet rendering)
  * - code/text → CodePreviewOverlay (syntax highlighted)
  * - markdown → DocumentFormattedMarkdownOverlay
  * - json → JSONPreviewOverlay
@@ -1560,6 +1562,17 @@ function FilePreviewRenderer({
           onClose={onClose}
           filePath={state.filePath}
           loadPdfData={loadPdfData}
+          theme={theme}
+        />
+      )
+
+    case 'spreadsheet':
+      return (
+        <XlsxFortunePreviewOverlay
+          isOpen
+          onClose={onClose}
+          filePath={state.filePath}
+          loadXlsxData={loadPdfData}
           theme={theme}
         />
       )

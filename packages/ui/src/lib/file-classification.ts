@@ -7,7 +7,7 @@
  */
 
 /** Preview types that map to specific overlay components */
-export type FilePreviewType = 'image' | 'code' | 'markdown' | 'json' | 'text' | 'pdf'
+export type FilePreviewType = 'image' | 'code' | 'markdown' | 'json' | 'text' | 'pdf' | 'spreadsheet'
 
 export interface FileClassification {
   /** The preview type, or null if no in-app preview is available */
@@ -64,6 +64,9 @@ const TEXT_EXTENSIONS = new Set([
 /** PDF files — rendered in PDFPreviewOverlay via embedded viewer */
 const PDF_EXTENSIONS = new Set(['pdf'])
 
+/** Spreadsheet files — rendered in FortuneSheet-based preview */
+const SPREADSHEET_EXTENSIONS = new Set(['xlsx'])
+
 /**
  * Extract the file extension from a path, lowercased.
  * Handles compound extensions like .env.local by returning the last segment.
@@ -79,7 +82,7 @@ function getExtension(filePath: string): string {
  * Classify a file path by extension to determine preview capability.
  *
  * Priority order when an extension matches multiple sets (e.g. svg):
- * image > code > markdown > json > text > pdf
+ * image > code > markdown > json > text > pdf > spreadsheet
  */
 export function classifyFile(filePath: string): FileClassification {
   const ext = getExtension(filePath)
@@ -91,6 +94,7 @@ export function classifyFile(filePath: string): FileClassification {
   if (CODE_EXTENSIONS.has(ext))     return { type: 'code', canPreview: true }
   if (TEXT_EXTENSIONS.has(ext))     return { type: 'text', canPreview: true }
   if (PDF_EXTENSIONS.has(ext))      return { type: 'pdf', canPreview: true }
+  if (SPREADSHEET_EXTENSIONS.has(ext)) return { type: 'spreadsheet', canPreview: true }
 
   return { type: null, canPreview: false }
 }
@@ -107,4 +111,5 @@ export const FILE_EXTENSIONS_PATTERN = [
   ...JSON_EXTENSIONS,
   ...TEXT_EXTENSIONS,
   ...PDF_EXTENSIONS,
+  ...SPREADSHEET_EXTENSIONS,
 ].join('|')

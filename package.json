@@ -95,6 +95,8 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.37",
+    "@corbe30/fortune-excel": "^2.3.1",
+    "@fortune-sheet/react": "^1.0.4",
     "@github/copilot-sdk": "^0.1.23",
     "@mariozechner/pi-coding-agent": "^0.53.0",
     "@modelcontextprotocol/sdk": "^1.24.3",

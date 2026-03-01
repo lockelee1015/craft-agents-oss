@@ -33,6 +33,11 @@ interface PDFPreview {
   filePath: string
 }
 
+interface SpreadsheetPreview {
+  type: 'spreadsheet'
+  filePath: string
+}
+
 interface CodePreview {
   type: 'code'
   filePath: string
@@ -65,6 +70,7 @@ interface TextPreview {
 export type FilePreviewState =
   | ImagePreview
   | PDFPreview
+  | SpreadsheetPreview
   | CodePreview
   | MarkdownPreview
   | JSONPreview
@@ -84,7 +90,7 @@ interface LinkInterceptorOptions {
   readFile: (path: string) => Promise<string>
   /** Read file as data URL (for image previews) */
   readFileDataUrl: (path: string) => Promise<string>
-  /** Read file as binary (Uint8Array) for PDF previews via react-pdf */
+  /** Read file as binary (Uint8Array) for PDF/spreadsheet previews */
   readFileBinary: (path: string) => Promise<Uint8Array>
 }
 
@@ -107,7 +113,7 @@ interface LinkInterceptorResult {
   revealCurrentInFinder: () => void
   /** Read file as data URL — passed to image overlays as their loader */
   readFileDataUrl: (path: string) => Promise<string>
-  /** Read file as binary — passed to PDF overlays for react-pdf */
+  /** Read file as binary — passed to PDF/spreadsheet overlays */
   readFileBinary: (path: string) => Promise<Uint8Array>
 }
 
@@ -148,8 +154,8 @@ export function useLinkInterceptor(options: LinkInterceptorOptions): LinkInterce
 
     const type = classification.type
 
-    // For image/pdf: set state immediately — the overlay handles its own async loading
-    if (type === 'image' || type === 'pdf') {
+    // For binary/asset previews: set state immediately — overlay handles async loading
+    if (type === 'image' || type === 'pdf' || type === 'spreadsheet') {
       setPreviewState({ type, filePath: path })
       return
     }
@@ -203,7 +209,7 @@ export function useLinkInterceptor(options: LinkInterceptorOptions): LinkInterce
     return optionsRef.current.readFileDataUrl(path)
   }, []) // Stable: uses optionsRef
 
-  /** Stable reference to readFileBinary for PDF overlay */
+  /** Stable reference to readFileBinary for PDF/spreadsheet overlays */
   const readFileBinary = useCallback((path: string) => {
     return optionsRef.current.readFileBinary(path)
   }, []) // Stable: uses optionsRef
@@ -238,7 +244,7 @@ function buildInitialTextState(type: FilePreviewType, path: string): FilePreview
     case 'text':
       return { type: 'text', filePath: path, content: null }
     default:
-      // Should never happen — image/pdf are handled before this function is called
+      // Should never happen — image/pdf/spreadsheet are handled before this function is called
       return { type: 'text', filePath: path, content: null }
   }
 }
