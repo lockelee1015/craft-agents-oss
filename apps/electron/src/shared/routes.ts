@@ -150,10 +150,15 @@ export const routes = {
         ? `sources/local/source/${sourceSlug}` as const
         : 'sources/local' as const,
 
-    /** Skills view (skills navigator). Pass a slug string for a local skill detail view. */
-    skills: (skillSlug?: string) => {
-      if (!skillSlug) return 'skills' as const
-      return `skills/skill/${skillSlug}` as const
+    /** Skills view (skills navigator). Supports local and market tabs. */
+    skills: (params?: { skillSlug?: string; tab?: 'local' | 'market'; marketId?: string }) => {
+      const { skillSlug, tab = 'local', marketId } = params ?? {}
+      if (tab === 'market') {
+        if (marketId) return `skills/market/item/${encodeURIComponent(marketId)}` as const
+        return 'skills/market' as const
+      }
+      if (skillSlug) return `skills/skill/${skillSlug}` as const
+      return 'skills' as const
     },
 
     /** Automations view (automations navigator) - supports type filtering */

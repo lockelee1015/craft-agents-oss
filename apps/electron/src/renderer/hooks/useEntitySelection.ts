@@ -103,4 +103,5 @@ export function createEntitySelection() {
 export const sessionSelection = createEntitySelection()
 export const sourceSelection = createEntitySelection()
 export const skillSelection = createEntitySelection()
+export const marketSkillSelection = createEntitySelection()
 export const automationSelection = createEntitySelection()

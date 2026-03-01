@@ -472,8 +472,8 @@ export function NavigationProvider({
         }
       }
 
-      // For skills: auto-select first skill if no details provided
-      if (isSkillsNavigation(nextState) && !nextState.details) {
+      // For local skills: auto-select first skill if no details provided
+      if (isSkillsNavigation(nextState) && (nextState.tab ?? 'local') === 'local' && !nextState.details) {
         const firstSkillSlug = getFirstSkillSlug()
         if (firstSkillSlug) {
           const stateWithSelection: NavigationState = {
@@ -619,6 +619,9 @@ export function NavigationProvider({
       if (navState.details.type === 'skill') {
         const { skillSlug } = navState.details
         return skills.some(s => s.slug === skillSlug)
+      }
+      if (navState.details.type === 'market-item') {
+        return true
       }
       return true
     }

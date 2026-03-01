@@ -146,6 +146,17 @@ export function parseCompoundRoute(route: string): ParsedCompoundRoute | null {
       return { navigator: 'skills', details: null }
     }
 
+    // Market tab routes
+    if (segments[1] === 'market') {
+      if (segments[2] === 'item' && segments[3]) {
+        return {
+          navigator: 'skills',
+          details: { type: 'market-item', id: decodeURIComponent(segments[3]) },
+        }
+      }
+      return { navigator: 'skills', details: { type: 'market', id: 'market' } }
+    }
+
     // skills/skill/{skillSlug}
     if (segments[1] === 'skill' && segments[2]) {
       return {
@@ -272,6 +283,8 @@ export function buildCompoundRoute(parsed: ParsedCompoundRoute): string {
 
   if (parsed.navigator === 'skills') {
     if (!parsed.details) return 'skills'
+    if (parsed.details.type === 'market') return 'skills/market'
+    if (parsed.details.type === 'market-item') return `skills/market/item/${encodeURIComponent(parsed.details.id)}`
     return `skills/skill/${parsed.details.id}`
   }
 
@@ -397,6 +410,12 @@ function convertCompoundToViewRoute(compound: ParsedCompoundRoute): ParsedRoute 
     if (!compound.details) {
       return { type: 'view', name: 'skills', params: {} }
     }
+    if (compound.details.type === 'market') {
+      return { type: 'view', name: 'skills-market', params: {} }
+    }
+    if (compound.details.type === 'market-item') {
+      return { type: 'view', name: 'skill-market-item', id: compound.details.id, params: {} }
+    }
     return { type: 'view', name: 'skill-info', id: compound.details.id, params: {} }
   }
 
@@ -519,6 +538,16 @@ function convertCompoundToNavigationState(compound: ParsedCompoundRoute): Naviga
     if (!compound.details) {
       return { navigator: 'skills', details: null }
     }
+    if (compound.details.type === 'market') {
+      return { navigator: 'skills', tab: 'market', details: null }
+    }
+    if (compound.details.type === 'market-item') {
+      return {
+        navigator: 'skills',
+        tab: 'market',
+        details: { type: 'market-item', id: compound.details.id },
+      }
+    }
     return {
       navigator: 'skills',
       details: { type: 'skill', skillSlug: compound.details.id },
@@ -594,6 +623,17 @@ function convertParsedRouteToNavigationState(parsed: ParsedRoute): NavigationSta
       return { navigator: 'sources', details: null }
     case 'skills':
       return { navigator: 'skills', details: null }
+    case 'skills-market':
+      return { navigator: 'skills', tab: 'market', details: null }
+    case 'skill-market-item':
+      if (parsed.id) {
+        return {
+          navigator: 'skills',
+          tab: 'market',
+          details: { type: 'market-item', id: parsed.id },
+        }
+      }
+      return { navigator: 'skills', tab: 'market', details: null }
     case 'skill-info':
       if (parsed.id) {
         return {
@@ -709,6 +749,14 @@ function navigationStateToCompoundRoute(state: NavigationState): ParsedCompoundR
   }
 
   if (state.navigator === 'skills') {
+    if (state.tab === 'market') {
+      return {
+        navigator: 'skills',
+        details: state.details?.type === 'market-item'
+          ? { type: 'market-item', id: state.details.id }
+          : { type: 'market', id: 'market' },
+      }
+    }
     return {
       navigator: 'skills',
       details: state.details?.type === 'skill' ? { type: 'skill', id: state.details.skillSlug } : null,

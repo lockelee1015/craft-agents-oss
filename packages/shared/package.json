@@ -52,7 +52,9 @@
     "./search": "./src/search/index.ts",
     "./tools": "./src/tools/index.ts",
     "./mentions": "./src/mentions/index.ts",
+    "./skills": "./src/skills/index.ts",
     "./skills/types": "./src/skills/types.ts",
+    "./skills/market-types": "./src/skills/market-types.ts",
     "./automations": "./src/automations/index.ts",
     "./automations/resolve-config-path": "./src/automations/resolve-config-path.ts"
   },

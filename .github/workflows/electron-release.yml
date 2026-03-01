@@ -75,10 +75,60 @@ jobs:
           CLEAN_NAME="${CSC_NAME#Developer ID Application: }"
           echo "CSC_NAME=$CLEAN_NAME" >> "$GITHUB_ENV"
 
-      - name: Publish To GitHub Releases
+      - name: Prepare Bun Runtime (arm64)
+        run: |
+          set -euo pipefail
+          BUN_VERSION="bun-v1.3.5"
+          BUN_DOWNLOAD="bun-darwin-aarch64"
+          TEMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TEMP_DIR"' EXIT
+
+          mkdir -p apps/electron/vendor/bun
+          curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/${BUN_DOWNLOAD}.zip" -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip"
+          curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/SHASUMS256.txt" -o "$TEMP_DIR/SHASUMS256.txt"
+
+          (
+            cd "$TEMP_DIR"
+            grep "${BUN_DOWNLOAD}.zip" SHASUMS256.txt | shasum -a 256 -c -
+          )
+
+          unzip -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip" -d "$TEMP_DIR"
+          cp "$TEMP_DIR/${BUN_DOWNLOAD}/bun" apps/electron/vendor/bun/bun
+          chmod +x apps/electron/vendor/bun/bun
+
+      - name: Publish Arm64 To GitHub Releases
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            npx electron-builder --config electron-builder.yml --project apps/electron --mac --arm64 --x64 --publish always -c.extraMetadata.version="${APP_VERSION}"
+            npx electron-builder --config electron-builder.yml --project apps/electron --mac --arm64 --publish always -c.extraMetadata.version="${APP_VERSION}"
           else
-            npx electron-builder --config electron-builder.yml --project apps/electron --mac --arm64 --x64 --publish always
+            npx electron-builder --config electron-builder.yml --project apps/electron --mac --arm64 --publish always
+          fi
+
+      - name: Prepare Bun Runtime (x64)
+        run: |
+          set -euo pipefail
+          BUN_VERSION="bun-v1.3.5"
+          BUN_DOWNLOAD="bun-darwin-x64"
+          TEMP_DIR="$(mktemp -d)"
+          trap 'rm -rf "$TEMP_DIR"' EXIT
+
+          mkdir -p apps/electron/vendor/bun
+          curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/${BUN_DOWNLOAD}.zip" -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip"
+          curl -fSL "https://github.com/oven-sh/bun/releases/download/${BUN_VERSION}/SHASUMS256.txt" -o "$TEMP_DIR/SHASUMS256.txt"
+
+          (
+            cd "$TEMP_DIR"
+            grep "${BUN_DOWNLOAD}.zip" SHASUMS256.txt | shasum -a 256 -c -
+          )
+
+          unzip -o "$TEMP_DIR/${BUN_DOWNLOAD}.zip" -d "$TEMP_DIR"
+          cp "$TEMP_DIR/${BUN_DOWNLOAD}/bun" apps/electron/vendor/bun/bun
+          chmod +x apps/electron/vendor/bun/bun
+
+      - name: Publish X64 To GitHub Releases
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            npx electron-builder --config electron-builder.yml --project apps/electron --mac --x64 --publish always -c.extraMetadata.version="${APP_VERSION}"
+          else
+            npx electron-builder --config electron-builder.yml --project apps/electron --mac --x64 --publish always
           fi

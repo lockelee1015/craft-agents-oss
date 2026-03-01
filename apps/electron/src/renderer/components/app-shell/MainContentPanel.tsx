@@ -37,6 +37,7 @@ import { extractLabelId } from '@craft-agent/shared/labels'
 import type { SessionStatusId } from '@/config/session-status-config'
 import { SourceInfoPage, ChatPage } from '@/pages'
 import SkillInfoPage from '@/pages/SkillInfoPage'
+import { SkillMarketDetailPage } from './SkillMarketDetailPage'
 import { getSettingsPageComponent } from '@/pages/settings/settings-pages'
 import { AutomationInfoPage } from '../automations/AutomationInfoPage'
 import type { ExecutionEntry } from '../automations/types'
@@ -48,11 +49,14 @@ export interface MainContentPanelProps {
   isFocusedMode?: boolean
   /** Optional className for the container */
   className?: string
+  /** Called when a market skill is installed successfully */
+  onMarketSkillInstalled?: (slug: string) => void
 }
 
 export function MainContentPanel({
   isFocusedMode = false,
   className,
+  onMarketSkillInstalled,
 }: MainContentPanelProps) {
   const { te } = useI18n()
   const navState = useNavigationState()
@@ -230,6 +234,27 @@ export function MainContentPanel({
 
   // Skills navigator - show skill info, multi-select panel, or empty state
   if (isSkillsNavigation(navState)) {
+    if ((navState.tab ?? 'local') === 'market') {
+      if (navState.details?.type === 'market-item') {
+        return wrapWithStoplight(
+          <Panel variant="grow" className={className}>
+            <SkillMarketDetailPage
+              workspaceId={activeWorkspaceId || ''}
+              marketId={navState.details.id}
+              onInstalled={onMarketSkillInstalled}
+            />
+          </Panel>
+        )
+      }
+      return wrapWithStoplight(
+        <Panel variant="grow" className={className}>
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p className="text-sm">{te('Select a market skill to preview')}</p>
+          </div>
+        </Panel>
+      )
+    }
+
     if (isSkillMultiSelectActive) {
       return wrapWithStoplight(
         <Panel variant="grow" className={className}>

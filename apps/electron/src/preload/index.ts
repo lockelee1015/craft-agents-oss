@@ -318,6 +318,23 @@ const api: ElectronAPI = {
     ipcRenderer.invoke(IPC_CHANNELS.SKILLS_OPEN_EDITOR, workspaceId, skillSlug),
   openSkillInFinder: (workspaceId: string, skillSlug: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.SKILLS_OPEN_FINDER, workspaceId, skillSlug),
+  searchMarketSkills: (query: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SKILLS_MARKET_SEARCH, query),
+  getMarketSkillDetail: (id: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SKILLS_MARKET_GET_DETAIL, id),
+  checkMarketSkillConflict: (workspaceId: string, scope: import('../shared/types').InstallScope, slug: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SKILLS_MARKET_CHECK_CONFLICT, workspaceId, scope, slug),
+  installMarketSkill: (input: { workspaceId: string; scope: import('../shared/types').InstallScope; marketSkillId: string; overwrite?: boolean; installId?: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.SKILLS_MARKET_INSTALL, input),
+  onMarketSkillInstallProgress: (callback: (progress: import('../shared/types').MarketInstallProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: import('../shared/types').MarketInstallProgress) => {
+      callback(progress)
+    }
+    ipcRenderer.on(IPC_CHANNELS.SKILLS_MARKET_INSTALL_PROGRESS, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.SKILLS_MARKET_INSTALL_PROGRESS, handler)
+    }
+  },
 
   // Skills change listener (live updates when skills are added/removed/modified)
   onSkillsChanged: (callback: (skills: import('@craft-agent/shared/skills').LoadedSkill[]) => void) => {

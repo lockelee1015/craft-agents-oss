@@ -54,7 +54,27 @@ export type { LoadedSource, FolderSourceConfig, SourceConnectionStatus };
 
 // Import skill types
 import type { LoadedSkill, SkillMetadata } from '@craft-agent/shared/skills/types';
+import type {
+  MarketSkillSummary,
+  MarketSkillDetail,
+  InstallScope,
+  InstallMarketSkillInput,
+  InstallMarketSkillResult,
+  ConflictResult,
+  MarketInstallProgressStage,
+  MarketInstallProgress,
+} from '@craft-agent/shared/skills/market-types';
 export type { LoadedSkill, SkillMetadata };
+export type {
+  MarketSkillSummary,
+  MarketSkillDetail,
+  InstallScope,
+  InstallMarketSkillInput,
+  InstallMarketSkillResult,
+  ConflictResult,
+  MarketInstallProgressStage,
+  MarketInstallProgress,
+};
 
 // Import session types from shared (for SessionFamily - different from core SessionMetadata)
 import type { SessionMetadata as SharedSessionMetadata } from '@craft-agent/shared/sessions/types';
@@ -782,6 +802,11 @@ export const IPC_CHANNELS = {
   SKILLS_DELETE: 'skills:delete',
   SKILLS_OPEN_EDITOR: 'skills:openEditor',
   SKILLS_OPEN_FINDER: 'skills:openFinder',
+  SKILLS_MARKET_SEARCH: 'skills:market:search',
+  SKILLS_MARKET_GET_DETAIL: 'skills:market:getDetail',
+  SKILLS_MARKET_INSTALL: 'skills:market:install',
+  SKILLS_MARKET_CHECK_CONFLICT: 'skills:market:checkConflict',
+  SKILLS_MARKET_INSTALL_PROGRESS: 'skills:market:installProgress',
   SKILLS_CHANGED: 'skills:changed',
 
   // Status management (workspace-scoped)
@@ -1128,6 +1153,11 @@ export interface ElectronAPI {
   deleteSkill(workspaceId: string, skillSlug: string): Promise<void>
   openSkillInEditor(workspaceId: string, skillSlug: string): Promise<void>
   openSkillInFinder(workspaceId: string, skillSlug: string): Promise<void>
+  searchMarketSkills(query: string): Promise<MarketSkillSummary[]>
+  getMarketSkillDetail(id: string): Promise<MarketSkillDetail>
+  checkMarketSkillConflict(workspaceId: string, scope: InstallScope, slug: string): Promise<ConflictResult>
+  installMarketSkill(input: Omit<InstallMarketSkillInput, 'workspaceRoot'> & { workspaceId: string }): Promise<InstallMarketSkillResult>
+  onMarketSkillInstallProgress(callback: (progress: MarketInstallProgress) => void): () => void
 
   // Skills change listener (live updates when skills are added/removed/modified)
   onSkillsChanged(callback: (skills: LoadedSkill[]) => void): () => void
@@ -1421,8 +1451,10 @@ export interface SettingsNavigationState {
  */
 export interface SkillsNavigationState {
   navigator: 'skills'
+  /** Active skills tab */
+  tab?: 'local' | 'market'
   /** Selected skill details or null for empty state */
-  details: { type: 'skill'; skillSlug: string } | null
+  details: { type: 'skill'; skillSlug: string } | { type: 'market-item'; id: string } | null
   /** Optional right sidebar panel state */
   rightSidebar?: RightSidebarPanel
 }
@@ -1510,6 +1542,13 @@ export const getNavigationStateKey = (state: NavigationState): string => {
     return 'sources'
   }
   if (state.navigator === 'skills') {
+    const tab = state.tab ?? 'local'
+    if (tab === 'market') {
+      if (state.details?.type === 'market-item') {
+        return `skills/market/item/${encodeURIComponent(state.details.id)}`
+      }
+      return 'skills/market'
+    }
     if (state.details?.type === 'skill') {
       return `skills/skill/${state.details.skillSlug}`
     }
@@ -1554,6 +1593,14 @@ export const parseNavigationStateKey = (key: string): NavigationState | null => 
 
   // Handle skills
   if (key === 'skills') return { navigator: 'skills', details: null }
+  if (key === 'skills/market') return { navigator: 'skills', tab: 'market', details: null }
+  if (key.startsWith('skills/market/item/')) {
+    const id = decodeURIComponent(key.slice(19))
+    if (id) {
+      return { navigator: 'skills', tab: 'market', details: { type: 'market-item', id } }
+    }
+    return { navigator: 'skills', tab: 'market', details: null }
+  }
   if (key.startsWith('skills/skill/')) {
     const skillSlug = key.slice(13)
     if (skillSlug) {

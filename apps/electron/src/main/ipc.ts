@@ -2587,6 +2587,68 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     await shell.showItemInFolder(skillDir)
   })
 
+  // Search skills market
+  ipcMain.handle(IPC_CHANNELS.SKILLS_MARKET_SEARCH, async (_event, query: string) => {
+    const { searchMarketSkills } = await import('@craft-agent/shared/skills')
+    return searchMarketSkills(query)
+  })
+
+  // Get skill market detail
+  ipcMain.handle(IPC_CHANNELS.SKILLS_MARKET_GET_DETAIL, async (_event, id: string) => {
+    const { getMarketSkillDetail } = await import('@craft-agent/shared/skills')
+    return getMarketSkillDetail(id)
+  })
+
+  // Check skill conflict before installation
+  ipcMain.handle(
+    IPC_CHANNELS.SKILLS_MARKET_CHECK_CONFLICT,
+    async (_event, workspaceId: string, scope: import('../shared/types').InstallScope, slug: string) => {
+      const workspace = getWorkspaceByNameOrId(workspaceId)
+      if (!workspace) throw new Error('Workspace not found')
+
+      const { checkMarketSkillConflict } = await import('@craft-agent/shared/skills')
+      return checkMarketSkillConflict(workspace.rootPath, scope, slug)
+    }
+  )
+
+  // Install skill from market
+  ipcMain.handle(
+    IPC_CHANNELS.SKILLS_MARKET_INSTALL,
+    async (
+      event,
+      input: { workspaceId: string; scope: import('../shared/types').InstallScope; marketSkillId: string; overwrite?: boolean; installId?: string }
+    ) => {
+      const workspace = getWorkspaceByNameOrId(input.workspaceId)
+      if (!workspace) throw new Error('Workspace not found')
+
+      const installId = input.installId ?? randomUUID()
+      const emitProgress = (progress: import('../shared/types').MarketInstallProgress) => {
+        event.sender.send(IPC_CHANNELS.SKILLS_MARKET_INSTALL_PROGRESS, progress)
+      }
+
+      const { installMarketSkill } = await import('@craft-agent/shared/skills')
+      try {
+        return await installMarketSkill({
+          workspaceRoot: workspace.rootPath,
+          scope: input.scope,
+          marketSkillId: input.marketSkillId,
+          overwrite: input.overwrite,
+          installId,
+          onProgress: emitProgress,
+        })
+      } catch (error) {
+        emitProgress({
+          installId,
+          stage: 'failed',
+          percent: 100,
+          message: 'Installation failed',
+          error: error instanceof Error ? error.message : String(error),
+        })
+        throw error
+      }
+    }
+  )
+
   // ============================================================
   // Status Management (Workspace-scoped)
   // ============================================================

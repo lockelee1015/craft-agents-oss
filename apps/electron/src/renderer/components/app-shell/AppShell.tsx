@@ -118,6 +118,7 @@ import {
 import type { SettingsSubpage } from "../../../shared/types"
 import { SourcesListPanel } from "./SourcesListPanel"
 import { SkillsListPanel } from "./SkillsListPanel"
+import { SkillMarketListPanel } from "./SkillMarketListPanel"
 import { AutomationsListPanel } from "../automations/AutomationsListPanel"
 import { APP_EVENTS, AGENT_EVENTS, type AutomationFilterKind, AUTOMATION_TYPE_TO_FILTER_KIND } from "../automations/types"
 import { useAutomations } from "@/hooks/useAutomations"
@@ -1005,8 +1006,12 @@ function AppShellContent({
   // Handle selecting a skill from the list
   const handleSkillSelect = React.useCallback((skill: LoadedSkill) => {
     if (!activeWorkspaceId) return
-    navigate(routes.view.skills(skill.slug))
+    navigate(routes.view.skills({ skillSlug: skill.slug }))
   }, [activeWorkspaceId, navigate])
+
+  const handleMarketSkillSelect = React.useCallback((id: string) => {
+    navigate(routes.view.skills({ tab: 'market', marketId: id }))
+  }, [navigate])
 
   // Handle selecting an automation from the list
   const handleAutomationSelect = React.useCallback((automationId: string) => {
@@ -1229,6 +1234,17 @@ function AppShellContent({
   const activeSessionWorkingDirectory = session.selected
     ? sessionMetaMap.get(session.selected)?.workingDirectory
     : undefined
+  const handleMarketSkillInstalled = React.useCallback((slug: string) => {
+    if (!activeWorkspaceId) return
+    window.electronAPI.getSkills(activeWorkspaceId, activeSessionWorkingDirectory).then((loaded) => {
+      setSkills(loaded || [])
+      navigate(routes.view.skills({ tab: 'local', skillSlug: slug }))
+    }).catch(err => {
+      console.error('[Chat] Failed to refresh skills after market install:', err)
+      navigate(routes.view.skills({ tab: 'local', skillSlug: slug }))
+    })
+  }, [activeWorkspaceId, activeSessionWorkingDirectory, navigate])
+
   React.useEffect(() => {
     if (!activeWorkspaceId) return
     window.electronAPI.getSkills(activeWorkspaceId, activeSessionWorkingDirectory).then((loaded) => {
@@ -1994,7 +2010,7 @@ function AppShellContent({
 
     // Skills navigator
     if (isSkillsNavigation(navState)) {
-      return te('All Skills')
+      return (navState.tab ?? 'local') === 'market' ? te('Skill Market') : te('All Skills')
     }
 
     // Tasks navigator
@@ -3099,7 +3115,7 @@ function AppShellContent({
                     />
                   )}
                   {/* Add Skill button (only for skills mode) */}
-                  {isSkillsNavigation(navState) && activeWorkspace && (
+                  {isSkillsNavigation(navState) && activeWorkspace && (navState.tab ?? 'local') === 'local' && (
                     <EditPopover
                       trigger={
                         <HeaderIconButton
@@ -3140,15 +3156,47 @@ function AppShellContent({
               />
             )}
             {isSkillsNavigation(navState) && activeWorkspaceId && (
-              /* Skills List */
-              <SkillsListPanel
-                skills={skills}
-                workspaceId={activeWorkspaceId}
-                workspaceRootPath={activeWorkspace?.rootPath}
-                onSkillClick={handleSkillSelect}
-                onDeleteSkill={handleDeleteSkill}
-                selectedSkillSlug={isSkillsNavigation(navState) && navState.details?.type === 'skill' ? navState.details.skillSlug : null}
-              />
+              <>
+                <div className="px-2 pt-2">
+                  <div className="inline-flex rounded-md border border-border/60 overflow-hidden">
+                    <button
+                      type="button"
+                      className={cn(
+                        'px-3 h-7 text-xs',
+                        (navState.tab ?? 'local') === 'local' ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      )}
+                      onClick={() => navigate(routes.view.skills({ tab: 'local' }))}
+                    >
+                      My Skills
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(
+                        'px-3 h-7 text-xs border-l border-border/60',
+                        (navState.tab ?? 'local') === 'market' ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      )}
+                      onClick={() => navigate(routes.view.skills({ tab: 'market' }))}
+                    >
+                      Market
+                    </button>
+                  </div>
+                </div>
+                {(navState.tab ?? 'local') === 'local' ? (
+                  <SkillsListPanel
+                    skills={skills}
+                    workspaceId={activeWorkspaceId}
+                    workspaceRootPath={activeWorkspace?.rootPath}
+                    onSkillClick={handleSkillSelect}
+                    onDeleteSkill={handleDeleteSkill}
+                    selectedSkillSlug={isSkillsNavigation(navState) && navState.details?.type === 'skill' ? navState.details.skillSlug : null}
+                  />
+                ) : (
+                  <SkillMarketListPanel
+                    selectedMarketId={isSkillsNavigation(navState) && navState.details?.type === 'market-item' ? navState.details.id : null}
+                    onMarketSkillClick={handleMarketSkillSelect}
+                  />
+                )}
+              </>
             )}
             {isAutomationsNavigation(navState) && (
               /* Automations List - filtered by type if automationFilter is active */
@@ -3254,7 +3302,10 @@ function AppShellContent({
             effectiveFocusMode ? "rounded-l-[14px]" : "rounded-l-[10px]",
             isRightSidebarVisible ? "rounded-r-[10px]" : "rounded-r-[14px]"
           )}>
-            <MainContentPanel isFocusedMode={effectiveFocusMode} />
+            <MainContentPanel
+              isFocusedMode={effectiveFocusMode}
+              onMarketSkillInstalled={handleMarketSkillInstalled}
+            />
           </div>
 
           {/* Right Sidebar - Inline Mode (≥ 920px) */}
