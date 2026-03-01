@@ -1,7 +1,14 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { SlashCommandMenu, DEFAULT_SLASH_COMMAND_GROUPS, type SlashCommandId } from '@/components/ui/slash-command-menu'
+import {
+  SlashCommandMenu,
+  DEFAULT_SLASH_COMMAND_GROUPS,
+  buildSdkSlashMenuCommands,
+  getSdkSlashCommandName,
+  isBuiltInSlashCommandId,
+  type SlashCommandId,
+} from '@/components/ui/slash-command-menu'
 import { ChevronDown, X } from 'lucide-react'
 import { PERMISSION_MODE_CONFIG, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { ActiveTasksBar, type BackgroundTask } from './ActiveTasksBar'
@@ -16,6 +23,7 @@ import type { SessionStatus } from '@/config/session-status-config'
 import { getState } from '@/config/session-status-config'
 import { SessionStatusMenu } from '@/components/ui/session-status-menu'
 import { useI18n } from '@/context/I18nContext'
+import type { SessionSlashCommand } from '../../../shared/types'
 
 // ============================================================================
 // Permission Mode Icon Component
@@ -55,6 +63,8 @@ export interface ActiveOptionBadgesProps {
   onKillTask?: (taskId: string) => void
   /** Callback to insert message into input field */
   onInsertMessage?: (text: string) => void
+  /** Backend-supported slash commands (Claude SDK, lazily loaded) */
+  slashCommands?: SessionSlashCommand[]
   /** Label entries applied to this session (e.g., ["bug", "priority::3"]) */
   sessionLabels?: string[]
   /** Available label configs (tree structure) for resolving label display */
@@ -94,6 +104,7 @@ export function ActiveOptionBadges({
   sessionId,
   onKillTask,
   onInsertMessage,
+  slashCommands = [],
   sessionLabels = [],
   labels = [],
   onRemoveLabel,
@@ -157,6 +168,8 @@ export function ActiveOptionBadges({
             ultrathinkEnabled={ultrathinkEnabled}
             onPermissionModeChange={onPermissionModeChange}
             onUltrathinkChange={onUltrathinkChange}
+            onInsertMessage={onInsertMessage}
+            slashCommands={slashCommands}
           />
         </div>
       )}
@@ -422,9 +435,18 @@ interface PermissionModeDropdownProps {
   ultrathinkEnabled?: boolean
   onPermissionModeChange?: (mode: PermissionMode) => void
   onUltrathinkChange?: (enabled: boolean) => void
+  onInsertMessage?: (text: string) => void
+  slashCommands?: SessionSlashCommand[]
 }
 
-function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onPermissionModeChange, onUltrathinkChange }: PermissionModeDropdownProps) {
+function PermissionModeDropdown({
+  permissionMode,
+  ultrathinkEnabled = false,
+  onPermissionModeChange,
+  onUltrathinkChange,
+  onInsertMessage,
+  slashCommands = [],
+}: PermissionModeDropdownProps) {
   const { te } = useI18n()
   const [open, setOpen] = React.useState(false)
   // Optimistic local state - updates immediately, syncs with prop
@@ -442,16 +464,35 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
     return active
   }, [optimisticMode, ultrathinkEnabled])
 
+  const commandGroups = React.useMemo(() => {
+    const groups = [...DEFAULT_SLASH_COMMAND_GROUPS]
+    const sdkCommands = buildSdkSlashMenuCommands(slashCommands)
+    if (sdkCommands.length > 0) {
+      groups.push({
+        id: 'commands',
+        commands: sdkCommands,
+      })
+    }
+    return groups
+  }, [slashCommands])
+
   // Handle command selection from dropdown
   const handleSelect = React.useCallback((commandId: SlashCommandId) => {
-    if (commandId === 'safe' || commandId === 'ask' || commandId === 'allow-all') {
-      setOptimisticMode(commandId)
-      onPermissionModeChange?.(commandId)
-    } else if (commandId === 'ultrathink') {
-      onUltrathinkChange?.(!ultrathinkEnabled)
+    if (isBuiltInSlashCommandId(commandId)) {
+      if (commandId === 'safe' || commandId === 'ask' || commandId === 'allow-all') {
+        setOptimisticMode(commandId)
+        onPermissionModeChange?.(commandId)
+      } else if (commandId === 'ultrathink') {
+        onUltrathinkChange?.(!ultrathinkEnabled)
+      }
+    } else {
+      const commandName = getSdkSlashCommandName(commandId)
+      if (commandName) {
+        onInsertMessage?.(`/${commandName} `)
+      }
     }
     setOpen(false)
-  }, [onPermissionModeChange, onUltrathinkChange, ultrathinkEnabled])
+  }, [onInsertMessage, onPermissionModeChange, onUltrathinkChange, ultrathinkEnabled])
 
   // Get config for current mode (use optimistic state for instant UI update)
   const config = PERMISSION_MODE_CONFIG[optimisticMode]
@@ -505,7 +546,7 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
         }}
       >
         <SlashCommandMenu
-          commandGroups={DEFAULT_SLASH_COMMAND_GROUPS}
+          commandGroups={commandGroups}
           activeCommands={activeCommands}
           onSelect={handleSelect}
           showFilter

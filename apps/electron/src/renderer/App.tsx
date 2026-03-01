@@ -903,14 +903,19 @@ export default function App() {
         : []
       const badges: ContentBadge[] = [...(externalBadges || []), ...mentionBadges]
 
-      // Step 4.1: Detect SDK slash commands (e.g., /compact) and create command badges
-      // This makes /compact render as an inline badge rather than raw text
-      const commandMatch = message.match(/^\/([a-z]+)(\s|$)/i)
-      if (commandMatch && commandMatch[1].toLowerCase() === 'compact') {
-        const commandText = commandMatch[0].trimEnd() // "/compact" without trailing space
+      // Step 4.1: Detect leading slash commands and create command badges.
+      // This makes `/command` render as an inline badge rather than raw text.
+      const commandMatch = message.match(/^\/([a-z][a-z0-9-]*)(\s|$)/i)
+      if (commandMatch) {
+        const commandName = commandMatch[1].toLowerCase()
+        const commandText = `/${commandName}`
+        const commandLabel = commandName
+          .split('-')
+          .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+          .join(' ')
         badges.unshift({
           type: 'command',
-          label: 'Compact',
+          label: commandLabel,
           rawText: commandText,
           start: 0,
           end: commandText.length,

@@ -40,6 +40,16 @@ import type { AutomationSystem } from '../../automations/index.ts';
  */
 export type AgentProvider = ModelProvider;
 
+/**
+ * Slash command supported by the backend SDK.
+ * Example: { name: 'compact', description: 'Compact conversation context' }
+ */
+export interface SupportedSlashCommand {
+  name: string;
+  description?: string;
+  argumentHint?: string;
+}
+
 
 // ============================================================
 // Callback Types
@@ -391,6 +401,9 @@ export interface AgentBackend {
 
   /** Get SDK session ID (for resume, null if no session) */
   getSessionId(): string | null;
+
+  /** Get slash commands supported by the active backend SDK */
+  getSupportedSlashCommands(): SupportedSlashCommand[];
 
   // ============================================================
   // Source Management

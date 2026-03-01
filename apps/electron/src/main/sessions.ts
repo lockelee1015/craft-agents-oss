@@ -68,7 +68,7 @@ import { resolveAuthEnvVars } from '@craft-agent/shared/config'
 import { toolMetadataStore } from '@craft-agent/shared/interceptor'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
 import { CraftMcpClient, McpClientPool, McpPoolServer } from '@craft-agent/shared/mcp'
-import { type Session, type Message, type SessionEvent, type FileAttachment, type StoredAttachment, type SendMessageOptions, IPC_CHANNELS, generateMessageId } from '../shared/types'
+import { type Session, type Message, type SessionEvent, type FileAttachment, type StoredAttachment, type SendMessageOptions, type SessionSlashCommand, IPC_CHANNELS, generateMessageId } from '../shared/types'
 import { formatPathsToRelative, formatToolInputPaths, perf, encodeIconToDataUrl, getEmojiIcon, resetSummarizationClient, resolveToolIcon, readFileAttachment } from '@craft-agent/shared/utils'
 import { loadAllSkills, loadSkillBySlug, type LoadedSkill } from '@craft-agent/shared/skills'
 import type { ToolDisplayMeta } from '@craft-agent/core/types'
@@ -79,6 +79,7 @@ import { evaluateAutoLabels } from '@craft-agent/shared/labels/auto'
 import { listLabels } from '@craft-agent/shared/labels/storage'
 import { extractLabelId } from '@craft-agent/shared/labels'
 import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@craft-agent/shared/automations'
+import { resolveSessionSlashCommands } from './session-slash-commands'
 
 // Import and re-export (extracted to avoid Electron dependency in tests)
 import { sanitizeForTitle } from './title-sanitizer'
@@ -1755,6 +1756,30 @@ export class SessionManager {
       isProcessing: m.isProcessing,
       sessionFolderPath: getSessionStoragePath(m.workspace.rootPath, m.id),
     } as Session
+  }
+
+  async getSessionSlashCommands(sessionId: string): Promise<SessionSlashCommand[]> {
+    const managed = this.sessions.get(sessionId)
+    if (!managed) return []
+
+    const workspaceConfig = loadWorkspaceConfig(managed.workspace.rootPath)
+    const backendContext = resolveBackendContext({
+      sessionConnectionSlug: managed.llmConnection,
+      workspaceDefaultConnectionSlug: workspaceConfig?.defaults?.defaultLlmConnection,
+      managedModel: managed.model,
+    })
+
+    if (managed.agent) {
+      return resolveSessionSlashCommands({
+        provider: backendContext.provider,
+        agentSlashCommands: managed.agent.getSupportedSlashCommands(),
+      })
+    }
+
+    return resolveSessionSlashCommands({
+      provider: backendContext.provider,
+      agentSlashCommands: null,
+    })
   }
 
   /**

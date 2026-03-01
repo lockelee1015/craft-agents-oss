@@ -80,6 +80,7 @@ export class ClaudeEventAdapter extends BaseEventAdapter {
   private lastAssistantUsage: AssistantUsage | null = null;
   private cachedContextWindow?: number;
   private _sdkTools: string[] = [];
+  private _sdkSlashCommands: string[] = [];
 
   private callbacks: ClaudeAdapterCallbacks;
 
@@ -182,6 +183,13 @@ export class ClaudeEventAdapter extends BaseEventAdapter {
    */
   get sdkTools(): string[] {
     return this._sdkTools;
+  }
+
+  /**
+   * Get SDK slash commands captured from init message.
+   */
+  get sdkSlashCommands(): string[] {
+    return this._sdkSlashCommands;
   }
 
   /**
@@ -505,6 +513,11 @@ export class ClaudeEventAdapter extends BaseEventAdapter {
       if ('tools' in msg && Array.isArray(msg.tools)) {
         this._sdkTools = msg.tools;
         this.callbacks.onDebug?.(`SDK init: captured ${this._sdkTools.length} tools`);
+      }
+      // Capture slash command list from SDK init message
+      if ('slash_commands' in msg && Array.isArray(msg.slash_commands)) {
+        this._sdkSlashCommands = msg.slash_commands.filter((cmd: unknown): cmd is string => typeof cmd === 'string');
+        this.callbacks.onDebug?.(`SDK init: captured ${this._sdkSlashCommands.length} slash commands`);
       }
     } else if (msg.subtype === 'compact_boundary') {
       events.push({

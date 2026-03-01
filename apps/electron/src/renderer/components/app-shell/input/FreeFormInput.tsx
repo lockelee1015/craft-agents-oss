@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import {
   InlineSlashCommand,
   useInlineSlashCommand,
+  isBuiltInSlashCommandId,
   type SlashCommandId,
 } from '@/components/ui/slash-command-menu'
 import {
@@ -62,7 +63,7 @@ import { EditPopover, getEditConfig } from '@/components/ui/EditPopover'
 import { SourceAvatar } from '@/components/ui/source-avatar'
 import { ConnectionIcon } from '@/components/icons/ConnectionIcon'
 import { FreeFormInputContextBadge } from './FreeFormInputContextBadge'
-import type { FileAttachment, LoadedSource, LoadedSkill } from '../../../../shared/types'
+import type { FileAttachment, LoadedSource, LoadedSkill, SessionSlashCommand } from '../../../../shared/types'
 import type { PermissionMode } from '@craft-agent/shared/agent/modes'
 import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
 import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
@@ -161,6 +162,8 @@ export interface FreeFormInputProps {
   // Label selection (for #labels)
   /** Available labels for #label autocomplete */
   labels?: LabelConfig[]
+  /** Backend-supported slash commands (Claude SDK, lazily loaded) */
+  slashCommands?: SessionSlashCommand[]
   /** Currently applied session labels */
   sessionLabels?: string[]
   /** Callback when a label is added via # menu */
@@ -237,6 +240,7 @@ export function FreeFormInput({
   onSourcesChange,
   skills = [],
   labels = [],
+  slashCommands = [],
   sessionLabels = [],
   onLabelAdd,
   workspaceId,
@@ -741,11 +745,12 @@ export function FreeFormInput({
 
   // Handle slash command selection (mode/feature commands)
   const handleSlashCommand = React.useCallback((commandId: SlashCommandId) => {
+    if (!isBuiltInSlashCommandId(commandId)) return
     if (commandId === 'safe') onPermissionModeChange?.('safe')
     else if (commandId === 'ask') onPermissionModeChange?.('ask')
     else if (commandId === 'allow-all') onPermissionModeChange?.('allow-all')
     else if (commandId === 'ultrathink') onUltrathinkChange?.(!ultrathinkEnabled)
-  }, [permissionMode, ultrathinkEnabled, onPermissionModeChange, onUltrathinkChange])
+  }, [ultrathinkEnabled, onPermissionModeChange, onUltrathinkChange])
 
   // Handle folder selection from slash command menu
   const handleSlashFolderSelect = React.useCallback((path: string) => {
@@ -773,6 +778,7 @@ export function FreeFormInput({
     onSelectCommand: handleSlashCommand,
     onSelectFolder: handleSlashFolderSelect,
     activeCommands,
+    slashCommands,
     recentFolders,
     homeDir,
   })

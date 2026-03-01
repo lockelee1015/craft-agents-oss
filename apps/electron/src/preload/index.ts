@@ -7,6 +7,7 @@ const api: ElectronAPI = {
   // Session management
   getSessions: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SESSIONS),
   getSessionMessages: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.GET_SESSION_MESSAGES, sessionId),
+  getSessionSlashCommands: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.GET_SESSION_SLASH_COMMANDS, sessionId),
   createSession: (workspaceId: string, options?: import('../shared/types').CreateSessionOptions) => ipcRenderer.invoke(IPC_CHANNELS.CREATE_SESSION, workspaceId, options),
   createSubSession: (workspaceId: string, parentSessionId: string, options?: import('../shared/types').CreateSessionOptions) => ipcRenderer.invoke(IPC_CHANNELS.CREATE_SUB_SESSION, workspaceId, parentSessionId, options),
   deleteSession: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.DELETE_SESSION, sessionId),

@@ -9,7 +9,7 @@ type ContentBlockParam =
 import { z } from 'zod';
 import { getSystemPrompt } from '../prompts/system.ts';
 import { BaseAgent, type MiniAgentConfig, MINI_AGENT_TOOLS, MINI_AGENT_MCP_KEYS } from './base-agent.ts';
-import type { BackendConfig, PostInitResult, PermissionRequestType, SdkMcpServerConfig } from './backend/types.ts';
+import type { BackendConfig, PostInitResult, PermissionRequestType, SdkMcpServerConfig, SupportedSlashCommand } from './backend/types.ts';
 // Plan types are used by UI components; not needed in craft-agent.ts since Safe Mode is user-controlled
 import { parseError, type AgentError } from './errors.ts';
 import { runErrorDiagnostics } from './diagnostics.ts';
@@ -94,6 +94,13 @@ import { ToolIndex } from './tool-matching.ts';
 
 // Claude event adapter — extracts SDK message → AgentEvent conversion into testable class
 import { ClaudeEventAdapter, buildWindowsSkillsDirError as buildWindowsSkillsDirErrorFn } from './backend/claude/event-adapter.ts';
+import {
+  CLAUDE_FALLBACK_SLASH_COMMANDS,
+  extractLeadingSlashCommandName,
+  isSdkSlashCommandPrompt,
+  mergeSlashCommands,
+  normalizeStructuredSlashCommands,
+} from './backend/claude/slash-commands.ts';
 
 // Re-export types for UI components
 export type { LoadedSource } from '../sources/types.ts';
@@ -334,6 +341,8 @@ export class ClaudeAgent extends BaseAgent {
   private lastStderrOutput: string[] = [];
   /** Pending steer message — injected via additionalContext on next PreToolUse */
   private pendingSteerMessage: string | null = null;
+  /** Cached SDK slash commands (merged from supportedCommands() + system:init.slash_commands) */
+  private supportedSlashCommands: SupportedSlashCommand[] = [];
 
   /**
    * Get the session ID for mode operations.
@@ -1043,25 +1052,24 @@ export class ClaudeAgent extends BaseAgent {
         abortController: this.currentQueryAbortController,
       };
 
-      // Known SDK slash commands that bypass context wrapping.
-      // These are sent directly to the SDK without date/session/source context.
-      // Currently only 'compact' is supported - add more here as needed.
-      const SDK_SLASH_COMMANDS = ['compact'] as const;
-
       // Detect SDK slash commands - must be sent directly without context wrapping.
       // Pattern: /command or /command <instructions>
       const trimmedMessage = userMessage.trim();
-      const commandMatch = trimmedMessage.match(/^\/([a-z]+)(\s|$)/i);
-      const commandName = commandMatch?.[1]?.toLowerCase();
-      const isSlashCommand = commandName &&
-        SDK_SLASH_COMMANDS.includes(commandName as typeof SDK_SLASH_COMMANDS[number]) &&
-        !attachments?.length;
+      const supportedSlashCommands = this.getSupportedSlashCommands();
+      const commandName = extractLeadingSlashCommandName(trimmedMessage);
+      const isSlashCommand = isSdkSlashCommandPrompt(
+        trimmedMessage,
+        supportedSlashCommands,
+        !!attachments?.length,
+      );
+      if (commandName && isSlashCommand) {
+        debug(`[chat] Detected SDK slash command: /${commandName}`);
+      }
 
       // Create the query - handle slash commands, binary attachments, or regular messages
       if (isSlashCommand) {
         // Send slash commands directly to SDK without context wrapping.
         // The SDK processes these as internal commands (e.g., /compact triggers compaction).
-        debug(`[chat] Detected SDK slash command: ${trimmedMessage}`);
         this.currentQuery = query({ prompt: trimmedMessage, options: optionsWithAbort });
       } else if (hasBinaryAttachments) {
         const sdkMessage = this.buildSDKUserMessage(userMessage, attachments);
@@ -1074,6 +1082,7 @@ export class ClaudeAgent extends BaseAgent {
         const prompt = this.buildTextPrompt(userMessage, attachments);
         this.currentQuery = query({ prompt, options: optionsWithAbort });
       }
+      await this.refreshSupportedSlashCommandsFromQuery();
 
       // Initialize event adapter for this turn
       // Session directory prevents race condition when concurrent sessions clobber toolMetadataStore.
@@ -1111,6 +1120,8 @@ export class ClaudeAgent extends BaseAgent {
           }
 
           const events = await this.eventAdapter.adapt(message);
+          // Keep slash command cache fresh from system:init.slash_commands as soon as it arrives.
+          this.updateSupportedSlashCommands(this.supportedSlashCommands);
           for (const event of events) {
             // Check for tool-not-found errors on inactive sources and attempt auto-activation
             const inactiveSourceError = this.detectInactiveSourceToolError(event, this.eventAdapter.getToolIndex());
@@ -1949,6 +1960,39 @@ export class ClaudeAgent extends BaseAgent {
    */
   getSdkTools(): string[] {
     return this.eventAdapter.sdkTools;
+  }
+
+  override getSupportedSlashCommands(): SupportedSlashCommand[] {
+    if (this.supportedSlashCommands.length > 0) {
+      return this.supportedSlashCommands.map((cmd) => ({ ...cmd }));
+    }
+    return CLAUDE_FALLBACK_SLASH_COMMANDS.map((cmd) => ({ ...cmd }));
+  }
+
+  private updateSupportedSlashCommands(commandsFromQuery: SupportedSlashCommand[] = []): void {
+    this.supportedSlashCommands = mergeSlashCommands(
+      commandsFromQuery,
+      this.eventAdapter.sdkSlashCommands,
+    );
+  }
+
+  private async refreshSupportedSlashCommandsFromQuery(): Promise<void> {
+    if (!this.currentQuery) return;
+
+    const queryWithCommands = this.currentQuery as Query & {
+      supportedCommands?: () => Promise<unknown> | unknown;
+    };
+    if (typeof queryWithCommands.supportedCommands !== 'function') return;
+
+    try {
+      const supported = await Promise.resolve(queryWithCommands.supportedCommands());
+      const normalized = normalizeStructuredSlashCommands(supported);
+      this.updateSupportedSlashCommands(
+        normalized.length > 0 ? normalized : this.supportedSlashCommands,
+      );
+    } catch (error) {
+      this.onDebug?.(`[ClaudeAgent] supportedCommands() failed: ${error}`);
+    }
   }
 
   setModel(model: string): void {

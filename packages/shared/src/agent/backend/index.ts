@@ -44,6 +44,7 @@ export type {
   LlmAuthType,
   LlmProviderType,
   PostInitResult,
+  SupportedSlashCommand,
 } from './types.ts';
 
 // Enums need to be exported as values, not just types

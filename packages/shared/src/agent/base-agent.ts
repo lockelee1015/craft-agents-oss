@@ -39,6 +39,7 @@ import type {
   BackendConfig,
   PostInitResult,
   BridgeUpdateContext,
+  SupportedSlashCommand,
 } from './backend/types.ts';
 import { AbortReason } from './backend/types.ts';
 import type { AuthRequest } from './session-scoped-tools.ts';
@@ -484,6 +485,10 @@ export abstract class BaseAgent implements AgentBackend {
 
   getSessionId(): string | null {
     return this._sessionId;
+  }
+
+  getSupportedSlashCommands(): SupportedSlashCommand[] {
+    return [];
   }
 
   setSessionId(sessionId: string | null): void {

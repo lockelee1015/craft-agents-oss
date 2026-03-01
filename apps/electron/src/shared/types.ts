@@ -140,6 +140,15 @@ export interface SessionFile {
 }
 
 /**
+ * Slash command supported by a session's backend SDK.
+ */
+export interface SessionSlashCommand {
+  name: string
+  description?: string
+  argumentHint?: string
+}
+
+/**
  * File search result for @ mention file selection.
  * Returned by FS_SEARCH IPC handler when user types @filename in input.
  */
@@ -629,6 +638,7 @@ export const IPC_CHANNELS = {
   CREATE_SUB_SESSION: 'sessions:createSubSession',
   DELETE_SESSION: 'sessions:delete',
   GET_SESSION_MESSAGES: 'sessions:getMessages',
+  GET_SESSION_SLASH_COMMANDS: 'sessions:getSlashCommands',
   SEND_MESSAGE: 'sessions:sendMessage',
   CANCEL_PROCESSING: 'sessions:cancel',
   KILL_SHELL: 'sessions:killShell',
@@ -978,6 +988,7 @@ export interface ElectronAPI {
   // Session management
   getSessions(): Promise<Session[]>
   getSessionMessages(sessionId: string): Promise<Session | null>
+  getSessionSlashCommands(sessionId: string): Promise<SessionSlashCommand[]>
   createSession(workspaceId: string, options?: CreateSessionOptions): Promise<Session>
   createSubSession(workspaceId: string, parentSessionId: string, options?: CreateSessionOptions): Promise<Session>
   deleteSession(sessionId: string): Promise<void>

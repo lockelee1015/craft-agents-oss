@@ -39,7 +39,7 @@ import {
 } from "@craft-agent/ui"
 import { useFocusZone } from "@/hooks/keyboard"
 import { useTheme } from "@/hooks/useTheme"
-import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill } from "../../../shared/types"
+import type { Session, Message, FileAttachment, StoredAttachment, PermissionRequest, CredentialRequest, CredentialResponse, LoadedSource, LoadedSkill, SessionSlashCommand } from "../../../shared/types"
 import type { PermissionMode } from "@craft-agent/shared/agent/modes"
 import type { ThinkingLevel } from "@craft-agent/shared/agent/thinking-levels"
 import { TurnCard, UserMessageBubble, groupMessagesByTurn, formatTurnAsMarkdown, formatActivityAsMarkdown, type Turn, type AssistantTurn, type UserTurn, type SystemTurn, type AuthRequestTurn } from "@craft-agent/ui"
@@ -476,6 +476,9 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
   // Track which label should auto-open its value popover after being added via # menu.
   // Set when a valued label is selected, cleared once the popover opens.
   const [autoOpenLabelId, setAutoOpenLabelId] = useState<string | null>(null)
+  const [slashCommands, setSlashCommands] = useState<SessionSlashCommand[]>([])
+  const slashCommandRequestIdRef = React.useRef(0)
+  const prevProcessingForSlashRef = React.useRef(false)
 
   // ============================================================================
   // Search Highlighting (from session list search)
@@ -508,6 +511,46 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
       textareaRef.current?.focus()
     }
   }, [session?.id, isFocused, isSearchModeActive])
+
+  const refreshSlashCommands = useCallback(async (sessionId: string) => {
+    if (!window.electronAPI?.getSessionSlashCommands) {
+      setSlashCommands([])
+      return
+    }
+    const requestId = ++slashCommandRequestIdRef.current
+    try {
+      const commands = await window.electronAPI.getSessionSlashCommands(sessionId)
+      if (requestId !== slashCommandRequestIdRef.current) return
+      setSlashCommands(commands)
+    } catch (error) {
+      if (requestId !== slashCommandRequestIdRef.current) return
+      console.error('[ChatDisplay] Failed to load session slash commands:', error)
+      setSlashCommands([])
+    }
+  }, [])
+
+  // Lazy-load slash commands on session switch.
+  useEffect(() => {
+    if (!session?.id) {
+      slashCommandRequestIdRef.current++
+      setSlashCommands([])
+      prevProcessingForSlashRef.current = false
+      return
+    }
+    prevProcessingForSlashRef.current = !!session.isProcessing
+    void refreshSlashCommands(session.id)
+  }, [session?.id, refreshSlashCommands])
+
+  // Refresh slash commands after processing completes (SDK init arrives after first real turn).
+  useEffect(() => {
+    if (!session?.id) return
+    const wasProcessing = prevProcessingForSlashRef.current
+    const isProcessing = !!session.isProcessing
+    if (wasProcessing && !isProcessing) {
+      void refreshSlashCommands(session.id)
+    }
+    prevProcessingForSlashRef.current = isProcessing
+  }, [session?.id, session?.isProcessing, refreshSlashCommands])
 
   // Reset match state when session or search query changes
   useEffect(() => {
@@ -1163,6 +1206,15 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
     })
   }
 
+  const handleInsertMessage = useCallback((text: string) => {
+    if (!onInputChange) return
+    const current = inputValue ?? ''
+    const needsSpace = current.length > 0 && !/\s$/.test(current)
+    const next = `${current}${needsSpace ? ' ' : ''}${text}`
+    onInputChange(next)
+    textareaRef.current?.focus()
+  }, [inputValue, onInputChange, textareaRef])
+
   // Handle stop request from InputContainer
   // silent=true when redirecting (sending new message), silent=false when user clicks Stop button
   const handleStop = (silent = false) => {
@@ -1546,7 +1598,8 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
               tasks={backgroundTasks}
               sessionId={session.id}
               onKillTask={(taskId) => killTask(taskId, backgroundTasks.find(t => t.id === taskId)?.type ?? 'shell')}
-              onInsertMessage={onInputChange}
+              onInsertMessage={handleInsertMessage}
+              slashCommands={slashCommands}
               sessionLabels={session.labels}
               labels={labels}
               onLabelsChange={onLabelsChange}
@@ -1589,6 +1642,7 @@ export const ChatDisplay = React.forwardRef<ChatDisplayHandle, ChatDisplayProps>
               onSourcesChange={onSourcesChange}
               skills={skills}
               labels={labels}
+              slashCommands={slashCommands}
               sessionLabels={session.labels}
               onLabelAdd={(labelId) => {
                 // Add label to session (prevent duplicates) and persist

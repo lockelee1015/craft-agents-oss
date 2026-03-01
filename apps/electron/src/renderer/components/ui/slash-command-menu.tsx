@@ -5,12 +5,14 @@ import { Icon_Folder } from '@craft-agent/ui'
 import { cn } from '@/lib/utils'
 import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } from '@craft-agent/shared/agent/modes'
 import { useI18n } from '@/context/I18nContext'
+import type { SessionSlashCommand } from '../../../shared/types'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SlashCommandId = 'safe' | 'ask' | 'allow-all' | 'ultrathink'
+export type BuiltInSlashCommandId = 'safe' | 'ask' | 'allow-all' | 'ultrathink'
+export type SlashCommandId = BuiltInSlashCommandId | `command:${string}`
 
 /** Union type for all item types in the slash menu */
 export type SlashItemType = 'command' | 'folder'
@@ -18,7 +20,7 @@ export type SlashItemType = 'command' | 'folder'
 export interface SlashCommand {
   id: SlashCommandId
   label: string
-  description: string
+  description?: string
   icon: React.ReactNode
   shortcut?: string
   /** Optional color for the command (hex color string) */
@@ -97,6 +99,39 @@ const ultrathinkCommand: SlashCommand = {
   icon: <Brain className={MENU_ICON_SIZE} />,
 }
 
+export function isBuiltInSlashCommandId(commandId: SlashCommandId): commandId is BuiltInSlashCommandId {
+  return commandId === 'safe' || commandId === 'ask' || commandId === 'allow-all' || commandId === 'ultrathink'
+}
+
+export function isSdkSlashCommandId(commandId: SlashCommandId): commandId is `command:${string}` {
+  return commandId.startsWith('command:')
+}
+
+export function getSdkSlashCommandName(commandId: SlashCommandId): string | null {
+  if (!isSdkSlashCommandId(commandId)) return null
+  const rawName = commandId.slice('command:'.length).trim().toLowerCase()
+  if (!rawName) return null
+  return rawName
+}
+
+export function buildSdkSlashMenuCommands(slashCommands: SessionSlashCommand[]): SlashCommand[] {
+  const dedup = new Map<string, SessionSlashCommand>()
+  for (const cmd of slashCommands) {
+    const name = cmd.name.trim().replace(/^\/+/, '').toLowerCase()
+    if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) continue
+    if (!dedup.has(name)) {
+      dedup.set(name, { ...cmd, name })
+    }
+  }
+
+  return Array.from(dedup.values()).map((command) => ({
+    id: `command:${command.name}` as const,
+    label: `/${command.name}`,
+    description: command.description || command.argumentHint,
+    icon: <span className="text-[11px] font-mono text-muted-foreground">/</span>,
+  }))
+}
+
 export const DEFAULT_SLASH_COMMANDS: SlashCommand[] = [
   ...permissionModeCommands,
   ultrathinkCommand,
@@ -168,7 +203,12 @@ function CommandItemContent({ command, isActive }: { command: SlashCommand; isAc
   return (
     <>
       <div className="shrink-0 text-muted-foreground">{command.icon}</div>
-      <div className="flex-1 min-w-0">{te(command.label)}</div>
+      <div className="flex-1 min-w-0">
+        <div className="truncate">{te(command.label)}</div>
+        {command.description && (
+          <div className="truncate text-[11px] text-muted-foreground">{te(command.description)}</div>
+        )}
+      </div>
       {isActive && (
         <div className="shrink-0 h-4 w-4 rounded-full bg-current flex items-center justify-center">
           <Check className="h-2.5 w-2.5 text-white dark:text-black" strokeWidth={3} />
@@ -527,6 +567,7 @@ export interface UseInlineSlashCommandOptions {
   onSelectCommand: (commandId: SlashCommandId) => void
   onSelectFolder: (path: string) => void
   activeCommands?: SlashCommandId[]
+  slashCommands?: SessionSlashCommand[]
   recentFolders?: string[]
   homeDir?: string
 }
@@ -548,6 +589,7 @@ export function useInlineSlashCommand({
   onSelectCommand,
   onSelectFolder,
   activeCommands = [],
+  slashCommands = [],
   recentFolders = [],
   homeDir,
 }: UseInlineSlashCommandOptions): UseInlineSlashCommandReturn {
@@ -576,6 +618,16 @@ export function useInlineSlashCommand({
       items: [ultrathinkCommand],
     })
 
+    // SDK slash commands section
+    const sdkCommands = buildSdkSlashMenuCommands(slashCommands)
+    if (sdkCommands.length > 0) {
+      result.push({
+        id: 'commands',
+        label: 'Commands',
+        items: sdkCommands,
+      })
+    }
+
     // Recent folders section - sorted alphabetically by folder name, show all
     if (recentFolders.length > 0) {
       const sortedFolders = [...recentFolders]
@@ -599,14 +651,14 @@ export function useInlineSlashCommand({
     }
 
     return result
-  }, [recentFolders, homeDir])
+  }, [slashCommands, recentFolders, homeDir])
 
   const handleInputChange = React.useCallback((value: string, cursorPosition: number) => {
     // Store current state for handleSelect
     currentInputRef.current = { value, cursorPosition }
 
     const textBeforeCursor = value.slice(0, cursorPosition)
-    const slashMatch = textBeforeCursor.match(/(?:^|\s)\/(\w*)$/)
+    const slashMatch = textBeforeCursor.match(/(?:^|\s)\/([a-z0-9-]*)$/i)
 
     // Only show menu if we have sections with items
     const hasItems = sections.some(s => s.items.length > 0)
@@ -663,8 +715,27 @@ export function useInlineSlashCommand({
   const handleSelectCommand = React.useCallback((commandId: SlashCommandId): string => {
     // Capture values BEFORE any state changes to avoid race conditions
     let result = ''
+    const { value: currentValue, cursorPosition } = currentInputRef.current
+
+    if (isSdkSlashCommandId(commandId)) {
+      const commandName = getSdkSlashCommandName(commandId)
+      if (commandName) {
+        const replacement = `/${commandName} `
+        if (slashStart >= 0) {
+          const before = currentValue.slice(0, slashStart)
+          const after = currentValue.slice(cursorPosition)
+          result = before + replacement + after
+        } else {
+          result = currentValue + replacement
+        }
+      } else {
+        result = currentValue
+      }
+      setIsOpen(false)
+      return result
+    }
+
     if (slashStart >= 0) {
-      const { value: currentValue, cursorPosition } = currentInputRef.current
       const before = currentValue.slice(0, slashStart)
       const after = currentValue.slice(cursorPosition)
       result = (before + after).trim()

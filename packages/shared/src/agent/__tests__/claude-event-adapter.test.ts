@@ -395,15 +395,17 @@ describe('ClaudeEventAdapter', () => {
   });
 
   describe('system', () => {
-    it('should capture sdkTools from init message', async () => {
+    it('should capture sdkTools and slash commands from init message', async () => {
       await adapter.adapt({
         type: 'system',
         subtype: 'init',
         tools: ['Read', 'Write', 'Bash'],
+        slash_commands: ['compact', 'clear'],
         session_id: 'sess-1',
       } as any);
 
       expect(adapter.sdkTools).toEqual(['Read', 'Write', 'Bash']);
+      expect(adapter.sdkSlashCommands).toEqual(['compact', 'clear']);
     });
 
     it('should emit info for compact_boundary', async () => {

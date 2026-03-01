@@ -157,6 +157,14 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     return session
   })
 
+  // Get supported slash commands for a session
+  ipcMain.handle(IPC_CHANNELS.GET_SESSION_SLASH_COMMANDS, async (_event, sessionId: string) => {
+    const end = perf.start('ipc.getSessionSlashCommands')
+    const commands = await sessionManager.getSessionSlashCommands(sessionId)
+    end()
+    return commands
+  })
+
   // Get workspaces
   ipcMain.handle(IPC_CHANNELS.GET_WORKSPACES, async () => {
     return sessionManager.getWorkspaces()
