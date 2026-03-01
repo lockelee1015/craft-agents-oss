@@ -487,6 +487,24 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
+  // Convert a file to markdown for in-app Office fallback previews (docx/pptx).
+  ipcMain.handle(IPC_CHANNELS.READ_FILE_AS_MARKDOWN, async (_event, path: string) => {
+    try {
+      const safePath = await validateFilePath(path)
+      const markitdown = new MarkItDown()
+      const result = await markitdown.convert(safePath)
+      const content = result?.textContent ?? ''
+      if (!content.trim()) {
+        throw new Error('Conversion returned empty result')
+      }
+      return content
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      ipcLog.error('readFileAsMarkdown error:', message)
+      throw new Error(`Failed to convert file to markdown: ${message}`)
+    }
+  })
+
   // Read a file as a data URL for in-app binary preview (images).
   // Returns data:{mime};base64,{content} — used by ImagePreviewOverlay.
   // Note: PDFs use file:// URLs directly (Chromium's PDF viewer doesn't support data: URLs).
