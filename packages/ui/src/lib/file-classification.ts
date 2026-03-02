@@ -79,7 +79,7 @@ const SPREADSHEET_EXTENSIONS = new Set(['xlsx'])
 /** Presentation files — rendered visually via PDF conversion */
 const PRESENTATION_EXTENSIONS = new Set(['pptx', 'ppt'])
 
-/** Office docs rendered via markdown conversion (fallback preview) */
+/** Office docs rendered visually via PDF conversion */
 const OFFICE_MARKDOWN_EXTENSIONS = new Set(['docx', 'doc'])
 
 /**

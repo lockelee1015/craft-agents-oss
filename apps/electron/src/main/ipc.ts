@@ -122,14 +122,14 @@ function resolveSofficeBinary(): string {
   throw new Error('LibreOffice not found (soffice). Install LibreOffice to enable PPT preview.')
 }
 
-async function convertPresentationToPdfBinary(sourcePath: string): Promise<Uint8Array> {
+async function convertOfficeToPdfBinary(sourcePath: string): Promise<Uint8Array> {
   const ext = sourcePath.split('.').pop()?.toLowerCase() ?? ''
-  if (ext !== 'pptx' && ext !== 'ppt') {
-    throw new Error(`Unsupported presentation extension: .${ext || 'unknown'}`)
+  if (ext !== 'pptx' && ext !== 'ppt' && ext !== 'docx' && ext !== 'doc') {
+    throw new Error(`Unsupported office extension: .${ext || 'unknown'}`)
   }
 
   const fileStat = await stat(sourcePath)
-  const cacheRoot = join(tmpdir(), 'craft-agent', 'preview-cache', 'presentations')
+  const cacheRoot = join(tmpdir(), 'craft-agent', 'preview-cache', 'office-pdf')
   await mkdir(cacheRoot, { recursive: true })
 
   const cacheKey = createHash('sha1')
@@ -604,7 +604,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
-  // Convert a file to markdown for in-app Office fallback previews (docx/doc).
+  // Convert a file to markdown for optional/legacy Office fallback previews.
   ipcMain.handle(IPC_CHANNELS.READ_FILE_AS_MARKDOWN, async (_event, path: string) => {
     try {
       const safePath = await validateFilePath(path)
@@ -622,15 +622,15 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
-  // Convert PPT/PPTX to PDF bytes for visual in-app presentation preview.
+  // Convert Office files to PDF bytes for visual in-app preview (pptx/ppt/docx/doc).
   ipcMain.handle(IPC_CHANNELS.READ_PRESENTATION_PDF, async (_event, path: string) => {
     try {
       const safePath = await validateFilePath(path)
-      return await convertPresentationToPdfBinary(safePath)
+      return await convertOfficeToPdfBinary(safePath)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       ipcLog.error('readPresentationPdf error:', message)
-      throw new Error(`Failed to convert presentation for preview: ${message}`)
+      throw new Error(`Failed to convert office document for preview: ${message}`)
     }
   })
 

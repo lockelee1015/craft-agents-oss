@@ -1160,7 +1160,6 @@ export default function App() {
       catch (error) { console.error('Failed to show in folder:', error) }
     },
     readFile: (path) => window.electronAPI.readFile(path),
-    readFileAsMarkdown: (path) => window.electronAPI.readFileAsMarkdown(path),
     readFileDataUrl: (path) => window.electronAPI.readFileDataUrl(path),
     readFileBinary: (path) => window.electronAPI.readFileBinary(path),
   })
@@ -1524,7 +1523,7 @@ function WindowCloseHandler() {
  * - pdf → PDFPreviewOverlay (binary, embedded via Chromium viewer)
  * - spreadsheet (.xlsx) → XlsxFortunePreviewOverlay (FortuneSheet rendering)
  * - presentation (.pptx/.ppt) → PDFPreviewOverlay (visual slide rendering)
- * - office (.docx/.doc) → markdown fallback via DocumentFormattedMarkdownOverlay
+ * - office (.docx/.doc) → PDFPreviewOverlay (visual document rendering)
  * - code/text → CodePreviewOverlay (syntax highlighted)
  * - markdown → DocumentFormattedMarkdownOverlay
  * - json → JSONPreviewOverlay
@@ -1596,12 +1595,12 @@ function FilePreviewRenderer({
 
     case 'office':
       return (
-        <DocumentFormattedMarkdownOverlay
+        <PDFPreviewOverlay
           isOpen
           onClose={onClose}
-          content={state.content ?? ''}
           filePath={state.filePath}
-          error={state.error}
+          loadPdfData={loadPresentationPdfData}
+          theme={theme}
         />
       )
 

@@ -46,8 +46,6 @@ interface PresentationPreview {
 interface OfficePreview {
   type: 'office'
   filePath: string
-  content: string | null
-  error?: string
 }
 
 interface CodePreview {
@@ -106,8 +104,6 @@ interface LinkInterceptorOptions {
   readFileDataUrl: (path: string) => Promise<string>
   /** Read file as binary (Uint8Array) for PDF/spreadsheet previews */
   readFileBinary: (path: string) => Promise<Uint8Array>
-  /** Convert file to markdown (for office preview fallback) */
-  readFileAsMarkdown: (path: string) => Promise<string>
 }
 
 // ── Hook return type ───────────────────────────────────────────────────────────
@@ -171,20 +167,8 @@ export function useLinkInterceptor(options: LinkInterceptorOptions): LinkInterce
     const type = classification.type
 
     // For binary/asset previews: set state immediately — overlay handles async loading
-    if (type === 'image' || type === 'pdf' || type === 'spreadsheet' || type === 'presentation') {
+    if (type === 'image' || type === 'pdf' || type === 'spreadsheet' || type === 'presentation' || type === 'office') {
       setPreviewState({ type, filePath: path })
-      return
-    }
-
-    // Office docs are binary; convert them to markdown before showing overlay.
-    if (type === 'office') {
-      try {
-        const content = await optionsRef.current.readFileAsMarkdown(path)
-        setPreviewState({ type: 'office', filePath: path, content })
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to convert office file'
-        setPreviewState({ type: 'office', filePath: path, content: '', error: errorMsg })
-      }
       return
     }
 
