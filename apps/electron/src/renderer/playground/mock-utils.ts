@@ -17,6 +17,10 @@ export const mockElectronAPI = {
     return null // Let FileReader API handle it
   },
 
+  readFileBinary: async (_path: string) => {
+    throw new Error('readFileBinary is unavailable in browser playground mode.')
+  },
+
   generateThumbnail: async (base64: string, mimeType: string) => {
     console.log('[Playground] generateThumbnail called')
     return null // Skip thumbnails in playground

@@ -53,6 +53,8 @@ import {
   JSONPreviewOverlay,
 } from '@craft-agent/ui'
 import { XlsxFortunePreviewOverlay } from '@/components/files/XlsxFortunePreviewOverlay'
+import { PptxVisualPreviewOverlay } from '@/components/files/PptxVisualPreviewOverlay'
+import { DocxVisualPreviewOverlay } from '@/components/files/DocxVisualPreviewOverlay'
 import { useLinkInterceptor, type FilePreviewState } from '@/hooks/useLinkInterceptor'
 import { getFileManagerName } from '@/lib/platform'
 import { ActionRegistryProvider } from '@/actions'
@@ -1492,7 +1494,6 @@ export default function App() {
               onClose={linkInterceptor.closePreview}
               loadDataUrl={linkInterceptor.readFileDataUrl}
               loadPdfData={linkInterceptor.readFileBinary}
-              loadPresentationPdfData={(path: string) => window.electronAPI.readPresentationPdf(path)}
               isDark={isDark}
             />
           )}
@@ -1522,8 +1523,8 @@ function WindowCloseHandler() {
  * - image → ImagePreviewOverlay (binary, loaded via data URL)
  * - pdf → PDFPreviewOverlay (binary, embedded via Chromium viewer)
  * - spreadsheet (.xlsx) → XlsxFortunePreviewOverlay (FortuneSheet rendering)
- * - presentation (.pptx/.ppt) → PDFPreviewOverlay (visual slide rendering)
- * - office (.docx/.doc) → PDFPreviewOverlay (visual document rendering)
+ * - presentation (.pptx) → PptxVisualPreviewOverlay (client-side PPTX rendering)
+ * - office (.docx) → DocxVisualPreviewOverlay (client-side DOCX rendering)
  * - code/text → CodePreviewOverlay (syntax highlighted)
  * - markdown → DocumentFormattedMarkdownOverlay
  * - json → JSONPreviewOverlay
@@ -1536,14 +1537,12 @@ function FilePreviewRenderer({
   onClose,
   loadDataUrl,
   loadPdfData,
-  loadPresentationPdfData,
   isDark,
 }: {
   state: FilePreviewState
   onClose: () => void
   loadDataUrl: (path: string) => Promise<string>
   loadPdfData: (path: string) => Promise<Uint8Array>
-  loadPresentationPdfData: (path: string) => Promise<Uint8Array>
   isDark: boolean
 }) {
   const theme = isDark ? 'dark' : 'light' as const
@@ -1584,22 +1583,22 @@ function FilePreviewRenderer({
 
     case 'presentation':
       return (
-        <PDFPreviewOverlay
+        <PptxVisualPreviewOverlay
           isOpen
           onClose={onClose}
           filePath={state.filePath}
-          loadPdfData={loadPresentationPdfData}
+          loadPptxData={loadPdfData}
           theme={theme}
         />
       )
 
     case 'office':
       return (
-        <PDFPreviewOverlay
+        <DocxVisualPreviewOverlay
           isOpen
           onClose={onClose}
           filePath={state.filePath}
-          loadPdfData={loadPresentationPdfData}
+          loadDocxData={loadPdfData}
           theme={theme}
         />
       )

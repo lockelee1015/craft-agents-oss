@@ -76,11 +76,11 @@ const PDF_EXTENSIONS = new Set(['pdf'])
 /** Spreadsheet files — rendered in FortuneSheet-based preview */
 const SPREADSHEET_EXTENSIONS = new Set(['xlsx'])
 
-/** Presentation files — rendered visually via PDF conversion */
-const PRESENTATION_EXTENSIONS = new Set(['pptx', 'ppt'])
+/** Presentation files — rendered with client-side PPTX viewer */
+const PRESENTATION_EXTENSIONS = new Set(['pptx'])
 
-/** Office docs rendered visually via PDF conversion */
-const OFFICE_MARKDOWN_EXTENSIONS = new Set(['docx', 'doc'])
+/** Word docs rendered with client-side DOCX viewer */
+const DOCX_EXTENSIONS = new Set(['docx'])
 
 /**
  * Extract the file extension from a path, lowercased.
@@ -111,7 +111,7 @@ export function classifyFile(filePath: string): FileClassification {
   if (PDF_EXTENSIONS.has(ext))      return { type: 'pdf', canPreview: true }
   if (SPREADSHEET_EXTENSIONS.has(ext)) return { type: 'spreadsheet', canPreview: true }
   if (PRESENTATION_EXTENSIONS.has(ext)) return { type: 'presentation', canPreview: true }
-  if (OFFICE_MARKDOWN_EXTENSIONS.has(ext)) return { type: 'office', canPreview: true }
+  if (DOCX_EXTENSIONS.has(ext)) return { type: 'office', canPreview: true }
 
   return { type: null, canPreview: false }
 }
@@ -130,5 +130,5 @@ export const FILE_EXTENSIONS_PATTERN = [
   ...PDF_EXTENSIONS,
   ...SPREADSHEET_EXTENSIONS,
   ...PRESENTATION_EXTENSIONS,
-  ...OFFICE_MARKDOWN_EXTENSIONS,
+  ...DOCX_EXTENSIONS,
 ].join('|')

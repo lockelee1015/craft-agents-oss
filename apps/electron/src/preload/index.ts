@@ -65,7 +65,6 @@ const api: ElectronAPI = {
   // File operations
   readFile: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_FILE, path),
   readFileAsMarkdown: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_FILE_AS_MARKDOWN, path),
-  readPresentationPdf: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_PRESENTATION_PDF, path) as Promise<Uint8Array>,
   readFileDataUrl: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_FILE_DATA_URL, path),
   readFileBinary: (path: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_FILE_BINARY, path) as Promise<Uint8Array>,
   openFileDialog: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE_DIALOG),
