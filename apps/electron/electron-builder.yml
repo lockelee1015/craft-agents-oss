@@ -1,6 +1,6 @@
 appId: com.lockelee1015.mooncake
 productName: MoonCake
-copyright: "Copyright © ${year} lockelee1015"
+copyright: "Copyright © lockelee1015"
 
 electronVersion: "39.2.7"
 
