@@ -3,8 +3,9 @@ import { appendFile, readFile, readdir, stat, realpath, mkdir, writeFile, unlink
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { normalize, isAbsolute, join, basename, dirname, resolve, relative, sep } from 'path'
 import { homedir, tmpdir } from 'os'
-import { randomUUID } from 'crypto'
-import { execSync } from 'child_process'
+import { randomUUID, createHash } from 'crypto'
+import { execSync, execFile } from 'child_process'
+import { promisify } from 'util'
 import { SessionManager } from './sessions'
 import { ipcLog, windowLog, searchLog } from './logger'
 import { WindowManager } from './window-manager'
@@ -26,6 +27,8 @@ import { MarkItDown } from 'markitdown-js'
 import { isUsableGitBashPath, validateGitBashPath } from './git-bash'
 import { getModelRefreshService } from './model-fetchers'
 import { parseTestConnectionError, createBuiltInConnection, validateModelList, piAuthProviderDisplayName } from './connection-setup-logic'
+
+const execFileAsync = promisify(execFile)
 
 /**
  * Sanitizes a filename to prevent path traversal and filesystem issues.
@@ -66,6 +69,120 @@ function buildBackendHostRuntimeContext() {
     appRootPath: app.isPackaged ? app.getAppPath() : process.cwd(),
     resourcesPath: process.resourcesPath,
     isPackaged: app.isPackaged,
+  }
+}
+
+function getSofficeCandidates(): string[] {
+  if (process.platform === 'darwin') {
+    return [
+      '/Applications/LibreOffice.app/Contents/MacOS/soffice',
+      '/Applications/LibreOffice.app/Contents/MacOS/soffice.bin',
+      '/opt/homebrew/bin/soffice',
+      '/usr/local/bin/soffice',
+    ]
+  }
+
+  if (process.platform === 'win32') {
+    return [
+      'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+      'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+    ]
+  }
+
+  return [
+    '/usr/bin/soffice',
+    '/usr/local/bin/soffice',
+    '/usr/bin/libreoffice',
+    '/snap/bin/libreoffice',
+  ]
+}
+
+function resolveSofficeBinary(): string {
+  for (const candidate of getSofficeCandidates()) {
+    if (existsSync(candidate)) return candidate
+  }
+
+  try {
+    const probeCommand = process.platform === 'win32'
+      ? 'where soffice'
+      : 'command -v soffice || command -v libreoffice'
+    const resolved = execSync(probeCommand, {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 3000,
+    })
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .find(Boolean)
+    if (resolved) return resolved
+  } catch {
+    // Ignore and throw clearer error below.
+  }
+
+  throw new Error('LibreOffice not found (soffice). Install LibreOffice to enable PPT preview.')
+}
+
+async function convertPresentationToPdfBinary(sourcePath: string): Promise<Uint8Array> {
+  const ext = sourcePath.split('.').pop()?.toLowerCase() ?? ''
+  if (ext !== 'pptx' && ext !== 'ppt') {
+    throw new Error(`Unsupported presentation extension: .${ext || 'unknown'}`)
+  }
+
+  const fileStat = await stat(sourcePath)
+  const cacheRoot = join(tmpdir(), 'craft-agent', 'preview-cache', 'presentations')
+  await mkdir(cacheRoot, { recursive: true })
+
+  const cacheKey = createHash('sha1')
+    .update(`${sourcePath}|${fileStat.size}|${fileStat.mtimeMs}`)
+    .digest('hex')
+  const cachedPdfPath = join(cacheRoot, `${cacheKey}.pdf`)
+
+  if (existsSync(cachedPdfPath)) {
+    const cached = await readFile(cachedPdfPath)
+    return new Uint8Array(cached)
+  }
+
+  const sofficeBinary = resolveSofficeBinary()
+  const conversionDir = join(cacheRoot, `job-${randomUUID()}`)
+  await mkdir(conversionDir, { recursive: true })
+
+  try {
+    await execFileAsync(
+      sofficeBinary,
+      [
+        '--headless',
+        '--nologo',
+        '--nodefault',
+        '--nolockcheck',
+        '--norestore',
+        '--convert-to',
+        'pdf:impress_pdf_Export',
+        '--outdir',
+        conversionDir,
+        sourcePath,
+      ],
+      {
+        timeout: 60_000,
+        windowsHide: true,
+        maxBuffer: 10 * 1024 * 1024,
+      },
+    )
+
+    let outputPdfPath = join(conversionDir, `${basename(sourcePath, `.${ext}`)}.pdf`)
+    if (!existsSync(outputPdfPath)) {
+      const generated = (await readdir(conversionDir))
+        .find(name => name.toLowerCase().endsWith('.pdf'))
+      if (!generated) {
+        throw new Error('LibreOffice conversion completed but no PDF output was produced')
+      }
+      outputPdfPath = join(conversionDir, generated)
+    }
+
+    const pdfBuffer = await readFile(outputPdfPath)
+    await writeFile(cachedPdfPath, pdfBuffer)
+    return new Uint8Array(pdfBuffer)
+  } finally {
+    await rm(conversionDir, { recursive: true, force: true }).catch(() => {})
   }
 }
 
@@ -487,7 +604,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     }
   })
 
-  // Convert a file to markdown for in-app Office fallback previews (docx/pptx).
+  // Convert a file to markdown for in-app Office fallback previews (docx/doc).
   ipcMain.handle(IPC_CHANNELS.READ_FILE_AS_MARKDOWN, async (_event, path: string) => {
     try {
       const safePath = await validateFilePath(path)
@@ -502,6 +619,18 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       const message = error instanceof Error ? error.message : 'Unknown error'
       ipcLog.error('readFileAsMarkdown error:', message)
       throw new Error(`Failed to convert file to markdown: ${message}`)
+    }
+  })
+
+  // Convert PPT/PPTX to PDF bytes for visual in-app presentation preview.
+  ipcMain.handle(IPC_CHANNELS.READ_PRESENTATION_PDF, async (_event, path: string) => {
+    try {
+      const safePath = await validateFilePath(path)
+      return await convertPresentationToPdfBinary(safePath)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      ipcLog.error('readPresentationPdf error:', message)
+      throw new Error(`Failed to convert presentation for preview: ${message}`)
     }
   })
 

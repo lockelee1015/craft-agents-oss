@@ -1493,6 +1493,7 @@ export default function App() {
               onClose={linkInterceptor.closePreview}
               loadDataUrl={linkInterceptor.readFileDataUrl}
               loadPdfData={linkInterceptor.readFileBinary}
+              loadPresentationPdfData={(path: string) => window.electronAPI.readPresentationPdf(path)}
               isDark={isDark}
             />
           )}
@@ -1522,7 +1523,8 @@ function WindowCloseHandler() {
  * - image → ImagePreviewOverlay (binary, loaded via data URL)
  * - pdf → PDFPreviewOverlay (binary, embedded via Chromium viewer)
  * - spreadsheet (.xlsx) → XlsxFortunePreviewOverlay (FortuneSheet rendering)
- * - office (.pptx/.docx) → markdown fallback via DocumentFormattedMarkdownOverlay
+ * - presentation (.pptx/.ppt) → PDFPreviewOverlay (visual slide rendering)
+ * - office (.docx/.doc) → markdown fallback via DocumentFormattedMarkdownOverlay
  * - code/text → CodePreviewOverlay (syntax highlighted)
  * - markdown → DocumentFormattedMarkdownOverlay
  * - json → JSONPreviewOverlay
@@ -1535,12 +1537,14 @@ function FilePreviewRenderer({
   onClose,
   loadDataUrl,
   loadPdfData,
+  loadPresentationPdfData,
   isDark,
 }: {
   state: FilePreviewState
   onClose: () => void
   loadDataUrl: (path: string) => Promise<string>
   loadPdfData: (path: string) => Promise<Uint8Array>
+  loadPresentationPdfData: (path: string) => Promise<Uint8Array>
   isDark: boolean
 }) {
   const theme = isDark ? 'dark' : 'light' as const
@@ -1575,6 +1579,17 @@ function FilePreviewRenderer({
           onClose={onClose}
           filePath={state.filePath}
           loadXlsxData={loadPdfData}
+          theme={theme}
+        />
+      )
+
+    case 'presentation':
+      return (
+        <PDFPreviewOverlay
+          isOpen
+          onClose={onClose}
+          filePath={state.filePath}
+          loadPdfData={loadPresentationPdfData}
           theme={theme}
         />
       )

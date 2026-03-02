@@ -38,6 +38,11 @@ interface SpreadsheetPreview {
   filePath: string
 }
 
+interface PresentationPreview {
+  type: 'presentation'
+  filePath: string
+}
+
 interface OfficePreview {
   type: 'office'
   filePath: string
@@ -78,6 +83,7 @@ export type FilePreviewState =
   | ImagePreview
   | PDFPreview
   | SpreadsheetPreview
+  | PresentationPreview
   | OfficePreview
   | CodePreview
   | MarkdownPreview
@@ -165,7 +171,7 @@ export function useLinkInterceptor(options: LinkInterceptorOptions): LinkInterce
     const type = classification.type
 
     // For binary/asset previews: set state immediately — overlay handles async loading
-    if (type === 'image' || type === 'pdf' || type === 'spreadsheet') {
+    if (type === 'image' || type === 'pdf' || type === 'spreadsheet' || type === 'presentation') {
       setPreviewState({ type, filePath: path })
       return
     }
@@ -266,7 +272,7 @@ function buildInitialTextState(type: FilePreviewType, path: string): FilePreview
     case 'text':
       return { type: 'text', filePath: path, content: null }
     default:
-      // Should never happen — image/pdf/spreadsheet/office are handled before this function is called
+      // Should never happen — image/pdf/spreadsheet/presentation/office are handled before this function is called
       return { type: 'text', filePath: path, content: null }
   }
 }

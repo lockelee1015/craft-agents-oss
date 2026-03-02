@@ -676,6 +676,7 @@ export const IPC_CHANNELS = {
   // File operations
   READ_FILE: 'file:read',
   READ_FILE_AS_MARKDOWN: 'file:readAsMarkdown',
+  READ_PRESENTATION_PDF: 'file:readPresentationPdf',
   READ_FILE_DATA_URL: 'file:readDataUrl',
   READ_FILE_BINARY: 'file:readBinary',
   OPEN_FILE_DIALOG: 'file:openDialog',
@@ -1031,6 +1032,8 @@ export interface ElectronAPI {
   readFile(path: string): Promise<string>
   /** Convert a file to markdown (used for office preview fallback) */
   readFileAsMarkdown(path: string): Promise<string>
+  /** Convert a PPT/PPTX file to PDF bytes for visual in-app preview */
+  readPresentationPdf(path: string): Promise<Uint8Array>
   /** Read a file as binary data (Uint8Array) */
   readFileBinary(path: string): Promise<Uint8Array>
   /** Read a file as a data URL (data:{mime};base64,...) for binary preview (images, PDFs) */
