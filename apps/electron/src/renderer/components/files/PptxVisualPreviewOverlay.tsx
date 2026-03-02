@@ -13,6 +13,12 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer
 }
 
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
+}
+
 export interface PptxVisualPreviewOverlayProps {
   isOpen: boolean
   onClose: () => void
@@ -55,10 +61,19 @@ export function PptxVisualPreviewOverlay({
         setIsLoading(true)
         setError(null)
 
-        const container = containerRef.current
-        if (!container) {
+        const waitForContainer = async (): Promise<HTMLDivElement> => {
+          const deadline = Date.now() + 2000
+          while (!cancelled) {
+            const node = containerRef.current
+            if (node) return node
+            if (Date.now() >= deadline) break
+            await nextFrame()
+          }
           throw new Error('PPTX preview container not ready')
         }
+
+        const container = await waitForContainer()
+        if (cancelled) return
 
         const [{ PPTXViewer }, bytes] = await Promise.all([
           import('pptx-viewer'),
