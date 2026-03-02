@@ -3,7 +3,7 @@ import ReactMarkdown, { type Components } from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import remarkGfm from 'remark-gfm'
 import { cn } from '../../lib/utils'
-import { FILE_EXTENSIONS_PATTERN } from '../../lib/file-classification'
+import { classifyFile } from '../../lib/file-classification'
 import { CodeBlock, InlineCode } from './CodeBlock'
 import { MarkdownDiffBlock } from './MarkdownDiffBlock'
 import { MarkdownJsonBlock } from './MarkdownJsonBlock'
@@ -73,9 +73,77 @@ interface CollapsibleContext {
   toggleSection: (id: string) => void
 }
 
-// File path detection regex - matches absolute, home-relative, explicit-relative, and bare relative paths.
-// Excludes URLs (http://, mailto:, etc.). Extensions derived from file-classification.ts to stay in sync.
-const FILE_PATH_REGEX = new RegExp(`^(?!https?://|mailto:|ftp://|data:)(?:[\\w~]|\\./)[\\w\\-./@]*\\.(?:${FILE_EXTENSIONS_PATTERN})$`, 'i')
+const EXTERNAL_SCHEME_REGEX = /^[a-zA-Z][a-zA-Z\d+.-]*:/
+const WINDOWS_DRIVE_PATH_REGEX = /^[a-zA-Z]:[\\/]/
+const DOMAIN_WITH_PATH_REGEX = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:[\\/]|$)/i
+
+function stripQueryAndHash(path: string): string {
+  const hashIndex = path.indexOf('#')
+  const queryIndex = path.indexOf('?')
+  const cutIndex = Math.min(
+    hashIndex === -1 ? path.length : hashIndex,
+    queryIndex === -1 ? path.length : queryIndex
+  )
+  return path.slice(0, cutIndex)
+}
+
+function decodeMaybe(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+/**
+ * Normalize markdown href to a local file path when possible.
+ * Supports:
+ * - absolute paths (/a/b, ~/a/b, C:\a\b)
+ * - relative paths (./a, ../a)
+ * - bare file names (including Unicode, e.g. 中文.docx)
+ * - file:// URLs
+ */
+function normalizeFileHref(href: string): string | null {
+  const trimmed = href.trim()
+  if (!trimmed || trimmed.startsWith('#')) return null
+
+  if (trimmed.startsWith('file://')) {
+    try {
+      const url = new URL(trimmed)
+      if (url.protocol !== 'file:') return null
+      const decodedPath = decodeMaybe(url.pathname)
+      // file:///C:/... on Windows
+      const normalized = /^\/[a-zA-Z]:[\\/]/.test(decodedPath)
+        ? decodedPath.slice(1)
+        : decodedPath
+      return classifyFile(stripQueryAndHash(normalized)).canPreview ? normalized : null
+    } catch {
+      return null
+    }
+  }
+
+  // Treat explicit URI schemes as external URLs (except Windows drive paths like C:\...)
+  if (EXTERNAL_SCHEME_REGEX.test(trimmed) && !WINDOWS_DRIVE_PATH_REGEX.test(trimmed)) {
+    return null
+  }
+
+  const decoded = decodeMaybe(trimmed)
+  const candidate = stripQueryAndHash(decoded)
+  if (!candidate) return null
+
+  // Keep fuzzy domains (example.com/path.pdf) as URL clicks, not local files.
+  const isLocalPrefix = candidate.startsWith('/') ||
+    candidate.startsWith('~/') ||
+    candidate.startsWith('./') ||
+    candidate.startsWith('../') ||
+    WINDOWS_DRIVE_PATH_REGEX.test(candidate)
+
+  if (!isLocalPrefix && DOMAIN_WITH_PATH_REGEX.test(candidate)) {
+    return null
+  }
+
+  return classifyFile(candidate).canPreview ? candidate : null
+}
 
 /**
  * Create custom components based on render mode.
@@ -125,9 +193,9 @@ function createComponents(
       const handleClick = (e: React.MouseEvent) => {
         e.preventDefault()
         if (href) {
-          // Check if it's a file path
-          if (FILE_PATH_REGEX.test(href) && onFileClick) {
-            onFileClick(href)
+          const normalizedFilePath = normalizeFileHref(href)
+          if (normalizedFilePath && onFileClick) {
+            onFileClick(normalizedFilePath)
           } else if (onUrlClick) {
             onUrlClick(href)
           }

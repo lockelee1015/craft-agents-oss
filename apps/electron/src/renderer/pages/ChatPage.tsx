@@ -226,8 +226,9 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   const handleOpenFile = React.useCallback(
     (path: string) => {
+      const isWindowsAbsolute = /^[a-zA-Z]:[\\/]/.test(path)
       // Resolve bare relative paths against the session working directory
-      const resolved = (path.startsWith('/') || path.startsWith('~/'))
+      const resolved = (path.startsWith('/') || path.startsWith('~/') || isWindowsAbsolute)
         ? path
         : workingDirectory
           ? `${workingDirectory}/${path}`
