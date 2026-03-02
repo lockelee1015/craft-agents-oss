@@ -42,6 +42,45 @@ type ArtifactVisual = {
   chipClassName: string
 }
 
+function OfficeWordIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="8" y="2" width="14" height="20" rx="2.5" fill="#2B579A" />
+      <path d="M17 2v4.6c0 .9.7 1.6 1.6 1.6H22" fill="#4F7DBF" />
+      <rect x="2" y="5.5" width="11.5" height="13" rx="2" fill="#185ABD" />
+      <path
+        d="M4.4 9.2h1.6l.9 4.9 1.1-4.9h1l1.1 4.9.9-4.9h1.6l-1.7 7.2H9.5L8.5 12 7.4 16.4H6z"
+        fill="#fff"
+      />
+    </svg>
+  )
+}
+
+function OfficePowerPointIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="8" y="2" width="14" height="20" rx="2.5" fill="#C43E1C" />
+      <path d="M17 2v4.6c0 .9.7 1.6 1.6 1.6H22" fill="#E05A34" />
+      <rect x="2" y="5.5" width="11.5" height="13" rx="2" fill="#D24726" />
+      <path
+        d="M4.9 8.9h2.8c2.1 0 3.3 1.1 3.3 2.9 0 1.9-1.3 3.1-3.4 3.1H6.7v1.7H5zM6.7 10.2v3.3h.8c1.2 0 1.8-.6 1.8-1.7 0-1-.6-1.6-1.8-1.6z"
+        fill="#fff"
+      />
+    </svg>
+  )
+}
+
+function OfficeExcelIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <rect x="8" y="2" width="14" height="20" rx="2.5" fill="#107C41" />
+      <path d="M17 2v4.6c0 .9.7 1.6 1.6 1.6H22" fill="#2FA968" />
+      <rect x="2" y="5.5" width="11.5" height="13" rx="2" fill="#0E6E3A" />
+      <path d="m4.7 9.1 2 3 2-3h1.9l-2.9 3.8 3 3.9H8.8l-2.1-3.1-2.1 3.1H2.8l3-3.9-3-3.8z" fill="#fff" />
+    </svg>
+  )
+}
+
 function getArtifactVisual(ext: string): ArtifactVisual {
   if (ext === 'pdf') {
     return {
@@ -61,17 +100,25 @@ function getArtifactVisual(ext: string): ArtifactVisual {
 
   if (ext === 'ppt' || ext === 'pptx' || ext === 'key') {
     return {
-      icon: FileText,
-      iconClassName: 'text-orange-600',
-      chipClassName: 'bg-orange-100 dark:bg-orange-950/40',
+      icon: OfficePowerPointIcon,
+      iconClassName: '',
+      chipClassName: 'bg-[#FCE9E5] dark:bg-[#4a2218]',
     }
   }
 
   if (ext === 'xls' || ext === 'xlsx' || ext === 'csv' || ext === 'tsv') {
     return {
-      icon: FileText,
-      iconClassName: 'text-emerald-600',
-      chipClassName: 'bg-emerald-100 dark:bg-emerald-950/40',
+      icon: OfficeExcelIcon,
+      iconClassName: '',
+      chipClassName: 'bg-[#E5F4EC] dark:bg-[#163827]',
+    }
+  }
+
+  if (ext === 'doc' || ext === 'docx') {
+    return {
+      icon: OfficeWordIcon,
+      iconClassName: '',
+      chipClassName: 'bg-[#E8EFFD] dark:bg-[#172a4a]',
     }
   }
 
