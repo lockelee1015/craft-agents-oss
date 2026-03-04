@@ -479,6 +479,11 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
       const message = error instanceof Error ? error.message : 'Unknown error'
       // ENOENT is expected for optional config files (e.g. automations.json)
       if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
+        const normalizedPath = normalize(path)
+        if (basename(normalizedPath) === 'automations.json') {
+          ipcLog.debug('readFile: automations.json not found, returning empty config:', path)
+          return JSON.stringify({ version: 2, automations: {} }, null, 2)
+        }
         ipcLog.debug('readFile: file not found:', path)
       } else {
         ipcLog.error('readFile error:', message)

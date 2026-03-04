@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useMemo, useEffect, useRef, useCallback, useState } from 'react'
 import type { ToolDisplayMeta } from '@craft-agent/core'
-import { normalizePath, pathStartsWith, stripPathPrefix } from '@craft-agent/core/utils'
+import { normalizePath } from '@craft-agent/core/utils'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   ChevronRight,
@@ -26,12 +26,12 @@ import { cn } from '../../lib/utils'
 import { Markdown } from '../markdown'
 import { Spinner } from '../ui/LoadingIndicator'
 import { Tooltip, TooltipTrigger, TooltipContent } from '../tooltip'
-import { parseDiffFromFile, type FileContents } from '@pierre/diffs'
-import { getDiffStats, getUnifiedDiffStats } from '../code-viewer'
 import { TurnCardActionsMenu } from './TurnCardActionsMenu'
 import { computeLastChildSet, groupActivitiesByParent, isActivityGroup, formatDuration, formatTokens, deriveTurnPhase, shouldShowThinkingIndicator, type ActivityGroup, type AssistantTurn } from './turn-utils'
 import { DocumentFormattedMarkdownOverlay } from '../overlay'
 import { AcceptPlanDropdown } from './AcceptPlanDropdown'
+import { computeEditWriteDiffStats, computeTurnFileChanges, stripSessionFolderPath, type TurnFileChangeSummary } from './turn-file-changes'
+import { getVscodeFileIcon } from './vscode-file-icons'
 
 // ============================================================================
 // Utilities
@@ -66,67 +66,6 @@ function stripMarkdown(text: string): string {
     // Collapse whitespace
     .replace(/\s+/g, ' ')
     .trim()
-}
-
-/**
- * Compute diff stats for Edit/Write tool inputs.
- * Uses @pierre/diffs for accurate line-by-line diff calculation.
- *
- * Supports both:
- * - Claude Code format: { file_path, old_string, new_string }
- * - Codex format: { changes: Array<{ path, kind, diff }> }
- *
- * @param toolName - 'Edit' or 'Write'
- * @param toolInput - The tool input containing old_string/new_string (Edit) or content (Write)
- * @returns { additions, deletions } or null if not applicable
- */
-function computeEditWriteDiffStats(
-  toolName: string | undefined,
-  toolInput: Record<string, unknown> | undefined
-): { additions: number; deletions: number } | null {
-  if (!toolInput) return null
-
-  if (toolName === 'Edit') {
-    // Check for Codex format: { changes: Array<{ path, kind, diff }> }
-    if (toolInput.changes && Array.isArray(toolInput.changes)) {
-      let totalAdditions = 0
-      let totalDeletions = 0
-      for (const change of toolInput.changes as Array<{ path?: string; diff?: string }>) {
-        if (change.diff) {
-          const stats = getUnifiedDiffStats(change.diff, change.path || 'file')
-          if (stats) {
-            totalAdditions += stats.additions
-            totalDeletions += stats.deletions
-          }
-        }
-      }
-      if (totalAdditions === 0 && totalDeletions === 0) return null
-      return { additions: totalAdditions, deletions: totalDeletions }
-    }
-
-    // Claude Code format: { file_path, old_string, new_string }
-    const oldString = (toolInput.old_string as string) ?? ''
-    const newString = (toolInput.new_string as string) ?? ''
-    if (!oldString && !newString) return null
-
-    const oldFile: FileContents = { name: 'file', contents: oldString, lang: 'text' }
-    const newFile: FileContents = { name: 'file', contents: newString, lang: 'text' }
-    const fileDiff = parseDiffFromFile(oldFile, newFile)
-    return getDiffStats(fileDiff)
-  }
-
-  if (toolName === 'Write') {
-    const content = (toolInput.content as string) ?? ''
-    if (!content) return null
-
-    // For Write, everything is an addition (new file content)
-    const oldFile: FileContents = { name: 'file', contents: '', lang: 'text' }
-    const newFile: FileContents = { name: 'file', contents: content, lang: 'text' }
-    const fileDiff = parseDiffFromFile(oldFile, newFile)
-    return getDiffStats(fileDiff)
-  }
-
-  return null
 }
 
 // ============================================================================
@@ -437,31 +376,6 @@ function getToolDisplayName(name: string): string {
   }
 
   return displayNames[stripped] || stripped
-}
-
-/**
- * Strip session/workspace folder paths from file paths for cleaner display.
- * Only strips paths that match the current session folder path.
- * Example: /path/to/sessions/260121-foo/plans/file.md → plans/file.md
- */
-function stripSessionFolderPath(filePath: string, sessionFolderPath?: string): string {
-  if (!sessionFolderPath) return filePath
-
-  // Get workspace path (parent of sessions folder)
-  // sessionFolderPath: /path/workspaces/{uuid}/sessions/{sessionId}
-  const workspacePath = normalizePath(sessionFolderPath).replace(/\/sessions\/[^/]+$/, '')
-
-  // Try session folder first (more specific)
-  if (pathStartsWith(filePath, sessionFolderPath)) {
-    return stripPathPrefix(filePath, sessionFolderPath)
-  }
-
-  // Then try workspace folder
-  if (pathStartsWith(filePath, workspacePath)) {
-    return stripPathPrefix(filePath, workspacePath)
-  }
-
-  return filePath
 }
 
 /** Format tool input as a concise summary - CSS truncate handles overflow */
@@ -1277,6 +1191,75 @@ function ActivityGroupRow({ group, expandedGroups: externalExpandedGroups, onExp
   )
 }
 
+interface TurnFileChangeBadgesProps {
+  changes: TurnFileChangeSummary[]
+  onOpenFile?: (path: string) => void
+}
+
+function TurnFileChangeBadges({ changes, onOpenFile }: TurnFileChangeBadgesProps) {
+  if (changes.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 select-none" data-search-exclude="true">
+      {changes.map((change) => {
+        const icon = getVscodeFileIcon(change.fileName)
+        const content = (
+          <>
+            <img
+              src={icon.src}
+              alt={icon.alt}
+              className="w-4 h-4 shrink-0"
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="truncate max-w-[260px]">{change.fileName}</span>
+            {change.isNew && (
+              <span className="px-1.5 py-0.5 rounded-[4px] bg-[color-mix(in_oklab,var(--success)_8%,var(--background))] text-success text-[10px] font-medium">
+                New
+              </span>
+            )}
+            <span className="text-success font-medium tabular-nums">+{change.additions}</span>
+            <span className="text-destructive font-medium tabular-nums">-{change.deletions}</span>
+          </>
+        )
+
+        const commonClassName = cn(
+          "inline-flex items-center gap-2 px-2 py-1 rounded-[8px] border border-border/70 bg-background text-foreground/85",
+          SIZE_CONFIG.fontSize
+        )
+
+        if (onOpenFile) {
+          return (
+            <button
+              key={change.path}
+              type="button"
+              className={cn(
+                commonClassName,
+                "hover:bg-muted/45 hover:border-border transition-colors",
+                "focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              )}
+              title={change.displayPath}
+              onClick={() => onOpenFile(change.path)}
+            >
+              {content}
+            </button>
+          )
+        }
+
+        return (
+          <div
+            key={change.path}
+            className={commonClassName}
+            title={change.displayPath}
+          >
+            {content}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ============================================================================
 // Streaming Response Preview Component
 // ============================================================================
@@ -1804,6 +1787,12 @@ export const TurnCard = React.memo(function TurnCard({
     [allSortedActivities]
   )
 
+  // Aggregate per-file changes for this turn (used for end-of-turn badges)
+  const turnFileChanges = useMemo(
+    () => computeTurnFileChanges(sortedActivities, sessionFolderPath),
+    [sortedActivities, sessionFolderPath]
+  )
+
   // Check if we have any Task subagents - if so, use grouped view
   const hasTaskSubagents = useMemo(
     () => sortedActivities.some(a => a.toolName === 'Task'),
@@ -1854,6 +1843,7 @@ export const TurnCard = React.memo(function TurnCard({
 
   // Only count non-plan activities for the collapsible section
   const hasActivities = sortedActivities.length > 0
+  const shouldShowFileChangeBadges = isComplete && turnFileChanges.length > 0
 
   // Determine if thinking indicator should show using the phase-based state machine.
   // This properly handles the "gap" state (awaiting) between tool completion and next action,
@@ -2101,6 +2091,16 @@ export const TurnCard = React.memo(function TurnCard({
             onAcceptWithCompact={onAcceptPlanWithCompact}
             isLastResponse={isLastResponse}
             compactMode={compactMode}
+          />
+        </div>
+      )}
+
+      {/* End-of-turn file changes summary (Edit/Write files changed in this turn) */}
+      {shouldShowFileChangeBadges && (
+        <div className={cn((hasActivities || response || planActivities.length > 0) && "mt-2")}>
+          <TurnFileChangeBadges
+            changes={turnFileChanges}
+            onOpenFile={onOpenFile}
           />
         </div>
       )}

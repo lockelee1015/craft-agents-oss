@@ -1623,13 +1623,18 @@ function FilePreviewRenderer({
       const isPlanFile =
         (state.filePath.includes('/plans/') || state.filePath.startsWith('plans/')) &&
         state.filePath.endsWith('.md')
+      const markdownContent =
+        state.content && state.content.trim().length > 0
+          ? state.content
+          : (state.error ? `# Failed to open file\n\n${state.error}` : '')
       return (
         <DocumentFormattedMarkdownOverlay
           isOpen
           onClose={onClose}
-          content={state.content ?? ''}
+          content={markdownContent}
           filePath={state.filePath}
           variant={isPlanFile ? 'plan' : 'response'}
+          error={state.error}
         />
       )
     }

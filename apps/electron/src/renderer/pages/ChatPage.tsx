@@ -36,6 +36,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   const {
     activeWorkspaceId,
+    workspaces,
     llmConnections,
     workspaceDefaultLlmConnection,
     onSendMessage,
@@ -219,23 +220,180 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   // Working directory for this session
   const workingDirectory = session?.workingDirectory
+  const sessionFolderPath = session?.sessionFolderPath
+  const workspaceRootPath = React.useMemo(() => {
+    if (!session?.workspaceId) return null
+    return workspaces.find((w) => w.id === session.workspaceId)?.rootPath ?? null
+  }, [session?.workspaceId, workspaces])
+
+  const resolvePathWithBase = React.useCallback((base: string, target: string) => {
+    const baseNoSlash = base.replace(/[\\/]+$/, '')
+    const targetNoSlash = target.replace(/^[\\/]+/, '')
+    return targetNoSlash ? `${baseNoSlash}/${targetNoSlash}` : baseNoSlash
+  }, [])
+
+  const expandAncestorBases = React.useCallback((base: string, maxDepth = 8): string[] => {
+    const normalized = base.replace(/\\/g, '/').replace(/\/+$/, '')
+    if (!normalized) return []
+
+    const out: string[] = [normalized]
+    let cursor = normalized
+
+    for (let i = 0; i < maxDepth; i += 1) {
+      const idx = cursor.lastIndexOf('/')
+      if (idx <= 0) break
+      cursor = cursor.slice(0, idx)
+      if (!cursor || cursor === '/' || cursor === '~') break
+      out.push(cursor)
+    }
+
+    return out
+  }, [])
+
+  const buildRelativeVariants = React.useCallback((relativePath: string): string[] => {
+    const normalized = relativePath.replace(/\\/g, '/').replace(/^\/+/, '')
+    if (!normalized) return []
+
+    const segments = normalized.split('/').filter(Boolean)
+    if (segments.length <= 2) return [normalized]
+
+    const variants = [normalized]
+    for (let i = 1; i <= segments.length - 2; i += 1) {
+      variants.push(segments.slice(i).join('/'))
+    }
+    return variants
+  }, [])
+
+  const dedupePaths = React.useCallback((paths: Array<string | undefined | null>): string[] => {
+    const seen = new Set<string>()
+    const out: string[] = []
+    for (const p of paths) {
+      if (!p) continue
+      const normalized = p.replace(/\\/g, '/')
+      if (seen.has(normalized)) continue
+      seen.add(normalized)
+      out.push(p)
+    }
+    return out
+  }, [])
+
+  const stripAgentVirtualPrefix = React.useCallback((rawPath: string): string | null => {
+    const normalized = rawPath.replace(/\\/g, '/')
+
+    // Absolute virtual roots commonly emitted by agent runtimes.
+    const absoluteVirtual = normalized.match(/^\/(workspace|repo|project)(?:\/(.*))?$/)
+    if (absoluteVirtual) {
+      return absoluteVirtual[2] || ''
+    }
+
+    // Relative virtual roots.
+    const relativeVirtual = normalized.match(/^(workspace|repo|project)\/(.*)$/)
+    if (relativeVirtual) {
+      return relativeVirtual[2]
+    }
+
+    return null
+  }, [])
+
   const handleWorkingDirectoryChange = React.useCallback(async (path: string) => {
     if (!session) return
     await window.electronAPI.sessionCommand(session.id, { type: 'updateWorkingDirectory', dir: path })
   }, [session])
 
   const handleOpenFile = React.useCallback(
-    (path: string) => {
+    async (path: string) => {
       const isWindowsAbsolute = /^[a-zA-Z]:[\\/]/.test(path)
+      const isAbsoluteUnixLike = path.startsWith('/') || path.startsWith('~/')
+      const preferredBasePath = workingDirectory || workspaceRootPath || undefined
+
+      let effectivePath = path
+      let shouldTreatAsRelative = !isWindowsAbsolute && !isAbsoluteUnixLike
+
+      // Codex may emit virtual container paths (/workspace/...) that are not
+      // valid local filesystem paths in Electron. Map them to the session cwd.
+      const virtualRelativePath = stripAgentVirtualPrefix(path)
+      if (virtualRelativePath !== null) {
+        let relativeVirtualPath = virtualRelativePath
+
+        // Some runtimes emit /workspace/<repo>/... while local cwd is already
+        // .../<repo>. Avoid duplicating the repo folder on join.
+        const baseName = (preferredBasePath || '').split(/[\\/]/).filter(Boolean).pop()
+        if (baseName && relativeVirtualPath.startsWith(`${baseName}/`)) {
+          relativeVirtualPath = relativeVirtualPath.slice(baseName.length + 1)
+        }
+        effectivePath = relativeVirtualPath
+        shouldTreatAsRelative = true
+      }
+
+      // For absolute local paths, open directly.
+      if (!shouldTreatAsRelative && (isAbsoluteUnixLike || isWindowsAbsolute)) {
+        onOpenFile(effectivePath)
+        return
+      }
+
+      // Relative path: try multiple bases and open the first readable match.
+      const relativePath = effectivePath.replace(/^[\\/]+/, '')
+      const activeWorkspaceRootPath = activeWorkspaceId
+        ? workspaces.find((w) => w.id === activeWorkspaceId)?.rootPath
+        : undefined
+
+      const rootBases = dedupePaths([
+        workingDirectory,
+        sessionFolderPath,
+        workspaceRootPath,
+        activeWorkspaceRootPath,
+        ...workspaces.map((w) => w.rootPath),
+      ])
+
+      const candidateBases = dedupePaths(
+        rootBases.flatMap((base) => expandAncestorBases(base))
+      )
+      const relativeVariants = dedupePaths(buildRelativeVariants(relativePath))
+
+      const candidates = dedupePaths([
+        ...candidateBases.flatMap((base) =>
+          relativeVariants.map((variant) => resolvePathWithBase(base, variant))
+        ),
+        // Tooling often writes into session-scoped plans/data folders but may report a shorter relative path.
+        ...(sessionFolderPath ? [
+          ...relativeVariants.map((variant) =>
+            resolvePathWithBase(resolvePathWithBase(sessionFolderPath, 'plans'), variant)
+          ),
+          ...relativeVariants.map((variant) =>
+            resolvePathWithBase(resolvePathWithBase(sessionFolderPath, 'data'), variant)
+          ),
+        ] : []),
+      ])
+
+      for (const candidate of candidates) {
+        try {
+          await window.electronAPI.readFile(candidate)
+          onOpenFile(candidate)
+          return
+        } catch {
+          // Try next candidate
+        }
+      }
+
       // Resolve bare relative paths against the session working directory
-      const resolved = (path.startsWith('/') || path.startsWith('~/') || isWindowsAbsolute)
-        ? path
-        : workingDirectory
-          ? `${workingDirectory}/${path}`
-          : path
-      onOpenFile(resolved)
+      const resolved = preferredBasePath
+        ? resolvePathWithBase(preferredBasePath, effectivePath)
+        : (candidates[0] ?? effectivePath)
+      onOpenFile(candidates[0] ?? resolved)
     },
-    [onOpenFile, workingDirectory]
+    [
+      onOpenFile,
+      workingDirectory,
+      sessionFolderPath,
+      workspaceRootPath,
+      resolvePathWithBase,
+      stripAgentVirtualPrefix,
+      dedupePaths,
+      expandAncestorBases,
+      buildRelativeVariants,
+      activeWorkspaceId,
+      workspaces,
+    ]
   )
 
   const handleOpenUrl = React.useCallback(
