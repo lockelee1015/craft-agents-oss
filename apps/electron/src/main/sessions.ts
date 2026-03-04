@@ -4,7 +4,7 @@ import { basename, join, normalize, isAbsolute, sep } from 'path'
 import { existsSync } from 'fs'
 import { appendFile, readFile, realpath } from 'fs/promises'
 import { homedir, tmpdir } from 'os'
-import { type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest } from '@craft-agent/shared/agent'
+import { type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, mergeSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest, type BrowserPaneFns } from '@craft-agent/shared/agent'
 import {
   resolveSessionConnection,
   createBackendFromConnection,
@@ -80,6 +80,8 @@ import { listLabels } from '@craft-agent/shared/labels/storage'
 import { extractLabelId } from '@craft-agent/shared/labels'
 import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@craft-agent/shared/automations'
 import { resolveSessionSlashCommands } from './session-slash-commands'
+import { shouldActivateBrowserOverlay } from './browser-tool-detection'
+import { releaseBrowserOwnershipOnForcedStop } from './session-browser-release'
 
 // Import and re-export (extracted to avoid Electron dependency in tests)
 import { sanitizeForTitle } from './title-sanitizer'
@@ -765,6 +767,7 @@ interface PendingDelta {
 export class SessionManager {
   private sessions: Map<string, ManagedSession> = new Map()
   private windowManager: WindowManager | null = null
+  private browserPaneManager: import('./browser-pane-manager').BrowserPaneManager | null = null
   // Delta batching for performance - reduces IPC events from 50+/sec to ~20/sec
   private pendingDeltas: Map<string, PendingDelta> = new Map()
   private deltaFlushTimers: Map<string, NodeJS.Timeout> = new Map()
@@ -797,12 +800,113 @@ export class SessionManager {
     this.windowManager = wm
   }
 
+  setBrowserPaneManager(bpm: import('./browser-pane-manager').BrowserPaneManager): void {
+    this.browserPaneManager = bpm
+    bpm.setSessionPathResolver((sessionId) => this.getSessionPath(sessionId))
+  }
+
   /** Returns a strictly increasing timestamp (ms). When Date.now() collides with
    *  the previous value, increments by 1 to preserve event ordering. */
   private monotonic(): number {
     const now = Date.now()
     this.lastTimestamp = now > this.lastTimestamp ? now : this.lastTimestamp + 1
     return this.lastTimestamp
+  }
+
+  private wireBrowserPaneCallbacks(sessionId: string): void {
+    const bpm = this.browserPaneManager
+    if (!bpm) return
+
+    const resolveSessionBrowserInstance = (_toolName: string, options?: { show?: boolean }): string => {
+      return bpm.createForSession(sessionId, { show: options?.show ?? false })
+    }
+
+    const resolveLifecycleTargetId = (requestedInstanceId?: string): string | null => {
+      if (requestedInstanceId) return requestedInstanceId
+      return bpm.getBoundInstanceId(sessionId)
+    }
+
+    const browserPaneFns: BrowserPaneFns = {
+      openPanel: async (options) => {
+        const instanceId = options?.background
+          ? bpm.createForSession(sessionId, { show: false })
+          : bpm.focusBoundForSession(sessionId)
+        return { instanceId }
+      },
+      navigate: (url) => bpm.navigate(resolveSessionBrowserInstance('browser_navigate'), url),
+      snapshot: () => bpm.getAccessibilitySnapshot(resolveSessionBrowserInstance('browser_snapshot')),
+      click: (ref, options) => bpm.clickElement(resolveSessionBrowserInstance('browser_click'), ref, options),
+      clickAt: (x, y) => bpm.clickAtCoordinates(resolveSessionBrowserInstance('browser_click_at'), x, y),
+      drag: (x1, y1, x2, y2) => bpm.drag(resolveSessionBrowserInstance('browser_drag'), x1, y1, x2, y2),
+      fill: (ref, value) => bpm.fillElement(resolveSessionBrowserInstance('browser_fill'), ref, value),
+      type: (text) => bpm.typeText(resolveSessionBrowserInstance('browser_type'), text),
+      select: (ref, value) => bpm.selectOption(resolveSessionBrowserInstance('browser_select'), ref, value),
+      setClipboard: (text) => bpm.setClipboard(resolveSessionBrowserInstance('browser_set_clipboard'), text),
+      getClipboard: () => bpm.getClipboard(resolveSessionBrowserInstance('browser_get_clipboard')),
+      screenshot: (options) => bpm.screenshot(resolveSessionBrowserInstance('browser_screenshot'), options),
+      screenshotRegion: (options) => bpm.screenshotRegion(resolveSessionBrowserInstance('browser_screenshot_region'), options),
+      getConsoleLogs: async (options) => bpm.getConsoleLogs(resolveSessionBrowserInstance('browser_console'), options),
+      windowResize: async (options) => bpm.windowResize(resolveSessionBrowserInstance('browser_window_resize'), options.width, options.height),
+      getNetworkLogs: async (options) => bpm.getNetworkLogs(resolveSessionBrowserInstance('browser_network'), options),
+      waitFor: (options) => bpm.waitFor(resolveSessionBrowserInstance('browser_wait'), options),
+      sendKey: (options) => bpm.sendKey(resolveSessionBrowserInstance('browser_key'), options),
+      getDownloads: (options) => bpm.getDownloads(resolveSessionBrowserInstance('browser_downloads'), options),
+      upload: async (ref, filePaths) => {
+        await bpm.uploadFile(resolveSessionBrowserInstance('browser_upload'), ref, filePaths)
+      },
+      scroll: (direction, amount) => bpm.scroll(resolveSessionBrowserInstance('browser_scroll'), direction, amount),
+      goBack: () => bpm.goBack(resolveSessionBrowserInstance('browser_back')),
+      goForward: () => bpm.goForward(resolveSessionBrowserInstance('browser_forward')),
+      evaluate: (expression) => bpm.evaluate(resolveSessionBrowserInstance('browser_evaluate'), expression),
+      focusWindow: async (targetInstanceId) => {
+        const targetId = targetInstanceId ?? bpm.getBoundInstanceId(sessionId) ?? bpm.focusBoundForSession(sessionId)
+        bpm.focus(targetId)
+        const target = bpm.getInstance(targetId)
+        return {
+          instanceId: targetId,
+          title: target?.title ?? 'New Tab',
+          url: target?.currentUrl ?? 'about:blank',
+        }
+      },
+      releaseControl: async (requestedInstanceId) => {
+        if (requestedInstanceId === 'all') {
+          bpm.clearAgentControl(sessionId)
+          return { action: 'released', requestedInstanceId, affectedIds: [] }
+        }
+
+        const targetId = resolveLifecycleTargetId(requestedInstanceId)
+        if (!targetId) {
+          return { action: 'noop', requestedInstanceId, affectedIds: [], reason: 'No browser window is bound to this session.' }
+        }
+        const result = bpm.clearAgentControlForInstance(targetId, sessionId)
+        return {
+          action: result.released ? 'released' : 'noop',
+          requestedInstanceId,
+          resolvedInstanceId: targetId,
+          affectedIds: result.released ? [targetId] : [],
+          reason: result.reason,
+        }
+      },
+      closeWindow: async (requestedInstanceId) => {
+        const targetId = resolveLifecycleTargetId(requestedInstanceId)
+        if (!targetId) {
+          return { action: 'noop', requestedInstanceId, affectedIds: [], reason: 'No browser window is bound to this session.' }
+        }
+        bpm.destroyInstance(targetId)
+        return { action: 'closed', requestedInstanceId, resolvedInstanceId: targetId, affectedIds: [targetId] }
+      },
+      hideWindow: async (requestedInstanceId) => {
+        const targetId = resolveLifecycleTargetId(requestedInstanceId)
+        if (!targetId) {
+          return { action: 'noop', requestedInstanceId, affectedIds: [], reason: 'No browser window is bound to this session.' }
+        }
+        bpm.hide(targetId)
+        return { action: 'hidden', requestedInstanceId, resolvedInstanceId: targetId, affectedIds: [targetId] }
+      },
+      listWindows: async () => bpm.listInstances(),
+    }
+
+    mergeSessionScopedToolCallbacks(sessionId, { browserPaneFns })
   }
 
   /**
@@ -2367,6 +2471,9 @@ export class SessionManager {
         managed.mcpPool.setSummarizeCallback(managed.agent.getSummarizeCallback())
       }
 
+      // Wire browser_tool callbacks for this session (if browser pane manager is available)
+      this.wireBrowserPaneCallbacks(managed.id)
+
       // Signal that the agent instance is ready (unblocks title generation)
       managed.agentReadyResolve?.()
 
@@ -2445,6 +2552,10 @@ export class SessionManager {
             managed.agent.forceAbort(AbortReason.PlanSubmitted)
             managed.isProcessing = false
 
+            // Plan submission pauses execution until user review.
+            // Release browser overlay/session ownership immediately.
+            await releaseBrowserOwnershipOnForcedStop(this.browserPaneManager, managed.id)
+
             // Send complete event so renderer knows processing stopped (include tokenUsage + artifacts)
             this.emitCompleteEvent(managed)
 
@@ -2496,6 +2607,9 @@ export class SessionManager {
           sessionLog.info(`Force-aborting after auth request for session ${managed.id}`)
           managed.agent.forceAbort(AbortReason.AuthRequest)
           managed.isProcessing = false
+
+          // Agent is paused waiting for user auth; release browser ownership.
+          void releaseBrowserOwnershipOnForcedStop(this.browserPaneManager, managed.id)
 
           // Send complete event so renderer knows processing stopped (include tokenUsage + artifacts)
           this.emitCompleteEvent(managed)
@@ -3457,6 +3571,11 @@ export class SessionManager {
     // Clean up session-scoped tool callbacks to prevent memory accumulation
     unregisterSessionScopedToolCallbacks(sessionId)
 
+    // Destroy browser instances bound to this session
+    if (this.browserPaneManager) {
+      this.browserPaneManager.destroyForSession(sessionId)
+    }
+
     // Dispose agent to clean up ConfigWatchers, event listeners, MCP connections
     if (managed.agent) {
       managed.agent.dispose()
@@ -4055,6 +4174,11 @@ export class SessionManager {
     managed.isProcessing = false
     managed.stopRequested = false  // Reset for next turn
 
+    // Clear browser overlay between turns. Keep ownership while queue is active.
+    if (this.browserPaneManager) {
+      await this.browserPaneManager.clearVisualsForSession(sessionId)
+    }
+
     // Notify power manager that a session stopped processing
     // (may allow display sleep if no other sessions are active)
     const { onSessionStopped } = await import('./power-manager')
@@ -4093,6 +4217,12 @@ export class SessionManager {
       // Has queued messages - process next
       this.processNextQueuedMessage(sessionId)
     } else {
+      // Session is fully idle; unbind browser windows so other sessions can reuse them.
+      if (this.browserPaneManager) {
+        await this.browserPaneManager.clearVisualsForSession(sessionId)
+        this.browserPaneManager.unbindAllForSession(sessionId)
+      }
+
       // No queue - emit complete to UI (token usage + unread + artifacts)
       this.emitCompleteEvent(managed, {
         hasUnread: managed.hasUnread,  // Propagate unread state to renderer
@@ -4593,6 +4723,20 @@ To view this task's output:
             parentToolUseId,
           }
           managed.messages.push(toolStartMessage)
+        }
+
+        // Activate browser agent-control overlay only for actionable browser commands.
+        const shouldActivateOverlay = shouldActivateBrowserOverlay(
+          event.toolName,
+          formattedToolInput,
+        )
+        if (this.browserPaneManager && shouldActivateOverlay) {
+          this.browserPaneManager.getOrCreateForSession(sessionId)
+          const resolvedDisplayName = toolDisplayMeta?.displayName ?? event.displayName ?? event.toolName
+          this.browserPaneManager.setAgentControl(sessionId, {
+            displayName: resolvedDisplayName,
+            intent: event.intent,
+          })
         }
 
         // Send event to renderer on first occurrence OR when input data is updated

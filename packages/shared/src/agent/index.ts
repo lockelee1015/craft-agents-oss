@@ -18,6 +18,7 @@ export {
   isPathInPlansDir,
   // Callback registry for session-scoped tool notifications
   registerSessionScopedToolCallbacks,
+  mergeSessionScopedToolCallbacks,
   unregisterSessionScopedToolCallbacks,
   // Types
   type SessionScopedToolCallbacks,
@@ -32,6 +33,13 @@ export {
   type MicrosoftOAuthAuthRequest,
   type CredentialInputMode,
 } from './session-scoped-tools.ts';
+
+export {
+  type BrowserPaneFns,
+  type BrowserScreenshotArgs,
+  type BrowserScreenshotResult,
+  type BrowserLifecycleActionResult,
+} from './browser-tools.ts';
 
 // Export mode-manager - Centralized mode management
 export {

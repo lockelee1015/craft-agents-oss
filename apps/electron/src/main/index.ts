@@ -70,6 +70,7 @@ import { registerIpcHandlers } from './ipc'
 import { initModelRefreshService, getModelRefreshService } from './model-fetchers'
 import { createApplicationMenu } from './menu'
 import { WindowManager } from './window-manager'
+import { BrowserPaneManager } from './browser-pane-manager'
 import { loadWindowState, saveWindowState } from './window-state'
 import { getWorkspaces, loadStoredConfig, addWorkspace, saveConfig } from '@craft-agent/shared/config'
 import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
@@ -112,6 +113,7 @@ const DEEPLINK_SCHEME = process.env.CRAFT_DEEPLINK_SCHEME || 'craftagents'
 
 let windowManager: WindowManager | null = null
 let sessionManager: SessionManager | null = null
+let browserPaneManager: BrowserPaneManager | null = null
 
 // Store pending deep link if app not ready yet (cold start)
 let pendingDeepLink: string | null = null
@@ -340,6 +342,12 @@ app.whenReady().then(async () => {
     sessionManager = new SessionManager()
     sessionManager.setWindowManager(windowManager)
 
+    // Initialize built-in browser manager
+    browserPaneManager = new BrowserPaneManager()
+    browserPaneManager.setWindowManager(windowManager)
+    browserPaneManager.registerToolbarIpc()
+    sessionManager.setBrowserPaneManager(browserPaneManager)
+
     // Initialize notification service
     initNotificationService(windowManager)
 
@@ -529,6 +537,12 @@ app.on('before-quit', async (event) => {
     }
     // Clean up SessionManager resources (file watchers, timers, etc.)
     sessionManager.cleanup()
+
+    // Tear down built-in browser windows and resources
+    if (browserPaneManager) {
+      browserPaneManager.destroyAll()
+      browserPaneManager = null
+    }
 
     // Stop all model refresh timers
     getModelRefreshService().stopAll()

@@ -43,6 +43,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'src/renderer/index.html'),
         playground: resolve(__dirname, 'src/renderer/playground.html'),
+        browserToolbar: resolve(__dirname, 'src/renderer/browser-toolbar.html'),
+        browserEmptyState: resolve(__dirname, 'src/renderer/browser-empty-state.html'),
       }
     }
   },

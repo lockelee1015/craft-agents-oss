@@ -33,6 +33,7 @@ import {
 } from '@craft-agent/session-tools-core';
 import { createLLMTool, type LLMQueryRequest, type LLMQueryResult } from './llm-tool.ts';
 import { createSpawnSessionTool, type SpawnSessionFn } from './spawn-session-tool.ts';
+import { createBrowserTools, type BrowserPaneFns } from './browser-tools.ts';
 
 // Re-export types for backward compatibility
 export type {
@@ -81,6 +82,12 @@ export interface SessionScopedToolCallbacks {
    * Each agent backend delegates to its onSpawnSession callback.
    */
   spawnSessionFn?: SpawnSessionFn;
+
+  /**
+   * Browser pane bridge for browser_tool.
+   * Set by Electron SessionManager when built-in browser is available.
+   */
+  browserPaneFns?: BrowserPaneFns;
 }
 
 // Registry of callbacks keyed by sessionId
@@ -95,6 +102,19 @@ export function registerSessionScopedToolCallbacks(
 ): void {
   sessionScopedToolCallbackRegistry.set(sessionId, callbacks);
   debug('session-scoped-tools', `Registered callbacks for session ${sessionId}`);
+}
+
+/**
+ * Merge partial callbacks for an existing session registration.
+ * Useful when host runtime wires additional capabilities after agent init.
+ */
+export function mergeSessionScopedToolCallbacks(
+  sessionId: string,
+  callbacks: Partial<SessionScopedToolCallbacks>
+): void {
+  const current = sessionScopedToolCallbackRegistry.get(sessionId) ?? {};
+  sessionScopedToolCallbackRegistry.set(sessionId, { ...current, ...callbacks });
+  debug('session-scoped-tools', `Merged callbacks for session ${sessionId}`);
 }
 
 /**
@@ -282,6 +302,17 @@ export function getSessionScopedTools(
       getSpawnSessionFn: () => {
         const callbacks = getSessionScopedToolCallbacks(sessionId);
         return callbacks?.spawnSessionFn;
+      },
+    }),
+  );
+
+  // Add browser_tool — desktop built-in browser automation
+  tools.push(
+    ...createBrowserTools({
+      sessionId,
+      getBrowserPaneFns: () => {
+        const callbacks = getSessionScopedToolCallbacks(sessionId);
+        return callbacks?.browserPaneFns;
       },
     }),
   );

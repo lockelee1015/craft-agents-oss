@@ -77,6 +77,9 @@ export {
 // UI primitives
 export {
   Spinner,
+  BrowserControls,
+  BrowserEmptyStateCard,
+  BrowserShader,
   SimpleDropdown,
   SimpleDropdownItem,
   PreviewHeader,
@@ -92,6 +95,10 @@ export {
   StyledDropdownMenuSubTrigger,
   StyledDropdownMenuSubContent,
   type SpinnerProps,
+  type BrowserControlsProps,
+  type BrowserEmptyPromptSample,
+  type BrowserEmptyStateCardProps,
+  type BrowserShaderProps,
   type SimpleDropdownProps,
   type SimpleDropdownItemProps,
   type PreviewHeaderProps,

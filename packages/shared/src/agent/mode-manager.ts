@@ -1432,6 +1432,34 @@ function isReadOnlyMcpToolWithConfig(toolName: string, config: ToolCheckConfig):
   return config.readOnlyMcpPatterns.some(pattern => pattern.test(toolName));
 }
 
+const SENSITIVE_BROWSER_TOOL_COMMANDS = new Set([
+  'upload',
+  'set-clipboard',
+  'get-clipboard',
+  'paste',
+  'evaluate',
+]);
+
+function getBrowserToolCommandVerb(toolInput: unknown): string {
+  if (!toolInput || typeof toolInput !== 'object') return '';
+  const command = (toolInput as { command?: unknown }).command;
+
+  if (typeof command === 'string') {
+    return command.trim().toLowerCase().split(/\s+/)[0] || '';
+  }
+
+  if (Array.isArray(command) && typeof command[0] === 'string') {
+    return command[0].trim().toLowerCase();
+  }
+
+  return '';
+}
+
+function isSensitiveBrowserToolCommand(toolInput: unknown): boolean {
+  const verb = getBrowserToolCommandVerb(toolInput);
+  return !!verb && SENSITIVE_BROWSER_TOOL_COMMANDS.has(verb);
+}
+
 /**
  * Check if an API call is allowed using the given config
  * Checks fine-grained endpoint rules (method + path pattern)
@@ -1732,6 +1760,16 @@ export function shouldAllowToolInMode(
 
     // Handle session-scoped tools - allow read-only, block mutations
     if (toolName.startsWith('mcp__session__')) {
+      // browser_tool is mostly read-only, but a subset of commands are sensitive.
+      // In Explore mode, block those commands and require explicit approval via Ask/Allow All.
+      if (toolName === 'mcp__session__browser_tool' && isSensitiveBrowserToolCommand(toolInput)) {
+        const verb = getBrowserToolCommandVerb(toolInput);
+        return {
+          allowed: false,
+          reason: `Sensitive browser command "${verb}" is blocked in ${config.displayName}. Switch to Ask or Allow All mode (${config.shortcutHint}) and explicitly approve it.`,
+        };
+      }
+
       // Read-only session tools - always allowed in Explore mode
       // These tools don't modify state, they only read/validate/invoke secondary models
       const readOnlySessionTools = [
@@ -1744,6 +1782,7 @@ export function shouldAllowToolInMode(
         'mcp__session__render_template',
         'mcp__session__call_llm',
         'mcp__session__report_artifact',
+        'mcp__session__browser_tool',
       ];
       if (readOnlySessionTools.includes(toolName)) {
         return { allowed: true };

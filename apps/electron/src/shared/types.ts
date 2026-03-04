@@ -630,6 +630,33 @@ export interface NewChatActionParams {
   name?: string
 }
 
+export interface BrowserInstanceInfo {
+  id: string
+  url: string
+  title: string
+  favicon: string | null
+  isLoading: boolean
+  canGoBack: boolean
+  canGoForward: boolean
+  boundSessionId: string | null
+  ownerType: 'session' | 'manual'
+  ownerSessionId: string | null
+  isVisible: boolean
+  agentControlActive?: boolean
+  themeColor?: string | null
+}
+
+export interface BrowserEmptyStateLaunchPayload {
+  route: string
+  token?: string
+}
+
+export interface BrowserEmptyStateLaunchResult {
+  ok: boolean
+  handled: boolean
+  reason?: string
+}
+
 // IPC channel names
 export const IPC_CHANNELS = {
   // Session management
