@@ -395,16 +395,24 @@ export class WindowManager {
   }
 
   /**
-   * Force close window by webContents.id (bypasses close event interception).
-   * Used when renderer confirms the close action (no modals to close).
+   * Cancel a pending close request for the given window.
+   * Clears the fallback timeout started when close was intercepted.
    */
-  forceCloseWindow(webContentsId: number): void {
-    // Clear any pending close timeout since renderer confirmed
+  cancelCloseWindow(webContentsId: number): void {
     const timeout = this.pendingCloseTimeouts.get(webContentsId)
     if (timeout) {
       clearTimeout(timeout)
       this.pendingCloseTimeouts.delete(webContentsId)
     }
+  }
+
+  /**
+   * Force close window by webContents.id (bypasses close event interception).
+   * Used when renderer confirms the close action (no modals to close).
+   */
+  forceCloseWindow(webContentsId: number): void {
+    // Clear any pending close timeout since renderer confirmed
+    this.cancelCloseWindow(webContentsId)
 
     const managed = this.windows.get(webContentsId)
     if (managed && !managed.window.isDestroyed()) {

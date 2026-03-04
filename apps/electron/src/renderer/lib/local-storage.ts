@@ -46,6 +46,8 @@ export const KEYS = {
 
   // Last selected session (workspace-scoped via suffix)
   lastSelectedSessionId: 'last-selected-session-id',
+  // Per-workspace URL (query string) for restoring panel stack/navigation on switch
+  workspaceUrl: 'workspace-url',
 
   // Settings navigation
   lastSettingsSubpage: 'last-settings-subpage',

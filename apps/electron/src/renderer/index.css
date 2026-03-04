@@ -71,8 +71,12 @@
 :root {
   /* === 6 BASE COLORS === */
   --background: oklch(0.98 0.003 265);
+  --background-elevated: color-mix(in srgb, var(--foreground) 1.5%, var(--background));
   --foreground: oklch(0.185 0.01 270);
+  --foreground-dimmed: color-mix(in srgb, var(--foreground) 80%, var(--background));
   --foreground-rgb: 38, 36, 42;             /* RGB for shadow borders */
+  --user-message-bubble: oklch(from var(--foreground) l c h / 0.05);
+  --user-message-bubble-dimmed: oklch(from var(--foreground) l c h / 0.03);
   --accent: oklch(0.62 0.13 293);           /* purple - brand, Auto mode */
   --accent-rgb: 104, 78, 133;               /* darkened RGB for shadow-tinted (70% of accent) */
   --info: oklch(0.75 0.16 70);              /* amber - warnings, Ask mode */
@@ -209,8 +213,12 @@
 .dark {
   /* === 6 BASE COLORS === */
   --background: oklch(0.2 0.005 270);
+  --background-elevated: color-mix(in srgb, var(--foreground) 1.5%, var(--background));
   --foreground: oklch(0.92 0.005 270);
+  --foreground-dimmed: color-mix(in srgb, var(--foreground) 80%, var(--background));
   --foreground-rgb: 227, 226, 229;           /* RGB for shadow borders */
+  --user-message-bubble: oklch(from var(--foreground) l c h / 0.05);
+  --user-message-bubble-dimmed: oklch(from var(--foreground) l c h / 0.03);
   --accent: oklch(0.68 0.13 293);            /* brighter purple in dark */
   --accent-rgb: 118, 92, 147;                /* darkened RGB for shadow-tinted (70% of accent) */
   --info: oklch(0.70 0.16 70);               /* amber */
@@ -481,6 +489,11 @@ html[data-font="inter"] {
     box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
   }
 
+  /* Thin horizontal scrollbar for panel stack */
+  .panel-scroll::-webkit-scrollbar {
+    height: 4px;
+  }
+
   /* Hide scrollbar but keep scrolling */
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -560,6 +573,44 @@ html[data-font="inter"] {
       rgba(0, 0, 0, var(--shadow-blur-opacity)) 0px 6px 6px -3px,
       rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.67)) 0px 12px 12px -6px,
       rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.67)) 0px 24px 24px -12px;
+  }
+
+  .shadow-focused {
+    position: relative;
+    box-shadow:
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, 0) 0px 0px 0px 0px,
+      rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.67)) 0px 1px 1px -0.5px,
+      rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.67)) 0px 3px 3px 1px,
+      rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.5)) 0px 6px 6px 2px,
+      rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.5)) 0px 12px 12px 3px,
+      rgba(0, 0, 0, calc(var(--shadow-blur-opacity) * 0.33)) 0px 24px 24px 4px;
+  }
+
+  .shadow-focused::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--foreground-rgb), 0.1),
+      rgba(var(--foreground-rgb), 0.3)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .shadow-focused > * {
+    position: relative;
+    z-index: 2;
   }
 
   .shadow-modal-small {

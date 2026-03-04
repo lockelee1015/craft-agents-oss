@@ -47,19 +47,30 @@ import { useI18n } from '@/context/I18nContext'
 export interface MainContentPanelProps {
   /** Whether the app is in focused mode (single chat, no sidebar) */
   isFocusedMode?: boolean
+  /** Whether both sidebar and navigator are hidden (focus mode / CMD+.) */
+  isSidebarAndNavigatorHidden?: boolean
   /** Optional className for the container */
   className?: string
   /** Called when a market skill is installed successfully */
   onMarketSkillInstalled?: (slug: string) => void
+  /**
+   * Override the navigation state for this panel.
+   * When provided, this panel renders based on the override instead of global NavigationState.
+   */
+  navStateOverride?: import('../../../shared/types').NavigationState | null
 }
 
 export function MainContentPanel({
   isFocusedMode = false,
+  isSidebarAndNavigatorHidden,
   className,
   onMarketSkillInstalled,
+  navStateOverride,
 }: MainContentPanelProps) {
   const { te } = useI18n()
-  const navState = useNavigationState()
+  const globalNavState = useNavigationState()
+  const navState = navStateOverride ?? globalNavState
+  const isStoplightCompensated = isSidebarAndNavigatorHidden ?? isFocusedMode
   const {
     activeWorkspaceId,
     onSessionStatusChange,
@@ -184,7 +195,7 @@ export function MainContentPanel({
 
   // Wrap content with StoplightProvider so PanelHeaders auto-compensate in focused mode
   const wrapWithStoplight = (content: React.ReactNode) => (
-    <StoplightProvider value={isFocusedMode}>
+    <StoplightProvider value={isStoplightCompensated}>
       {content}
     </StoplightProvider>
   )
