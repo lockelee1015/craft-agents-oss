@@ -63,7 +63,7 @@ Sentry.init({
 const machineId = createHash('sha256').update(hostname() + homedir()).digest('hex').slice(0, 16)
 Sentry.setUser({ id: machineId })
 
-import { join } from 'path'
+import { delimiter, join } from 'path'
 import { existsSync } from 'fs'
 import { SessionManager } from './sessions'
 import { registerIpcHandlers } from './ipc'
@@ -99,6 +99,45 @@ if (isDebugMode) {
   process.env.CRAFT_DEBUG = '1'
   enableDebug()
   setPerfEnabled(true)
+}
+
+// Configure built-in document tool wrappers for all agent bash sessions.
+// Wrappers are in resources/bin and execute Python scripts in resources/scripts via uv.
+{
+  // In packaged app: resources are at process.resourcesPath/app/resources/
+  // In dev: resources are at __dirname/../resources/ (sibling of dist/)
+  const resourcesBase = app.isPackaged
+    ? join(process.resourcesPath, 'app')
+    : join(__dirname, '..')
+
+  const platformKey = `${process.platform}-${process.arch}`
+  const uvPlatformDir = join(resourcesBase, 'resources', 'bin', platformKey)
+  const uvBinary = join(uvPlatformDir, process.platform === 'win32' ? 'uv.exe' : 'uv')
+  const binDir = join(resourcesBase, 'resources', 'bin')
+  const scriptsDir = join(resourcesBase, 'resources', 'scripts')
+
+  const bundledUvExists = existsSync(uvBinary)
+
+  process.env.CRAFT_UV = bundledUvExists ? uvBinary : 'uv'
+  process.env.CRAFT_SCRIPTS = scriptsDir
+  // Prepend wrapper/bin directories so commands like pdf-tool, docx-tool are discoverable.
+  process.env.PATH = `${binDir}${delimiter}${uvPlatformDir}${delimiter}${process.env.PATH ?? ''}`
+
+  if (!bundledUvExists) {
+    mainLog.warn('Bundled uv binary missing, document tools require uv on PATH.', {
+      expectedUvPath: uvBinary,
+      usingCraftUv: process.env.CRAFT_UV,
+    })
+  }
+
+  if (isDebugMode) {
+    mainLog.info('Document tool runtime configured.', {
+      uvBinary: process.env.CRAFT_UV,
+      binDir,
+      scriptsDir,
+      bundledUvExists,
+    })
+  }
 }
 
 // Register Pi model resolver so llm-connections.ts can resolve Pi models
