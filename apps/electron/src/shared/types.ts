@@ -389,6 +389,8 @@ export interface Session {
   // Advanced options (persisted per session)
   /** Permission mode for this session ('safe', 'ask', 'allow-all') */
   permissionMode?: PermissionMode
+  /** Previous permission mode (used for mode transition context across restarts) */
+  previousPermissionMode?: PermissionMode
   // Session status (user-controlled) - determines open vs closed
   sessionStatus?: SessionStatus
   // Labels (additive tags, many-per-session — bare IDs or "id::value" entries)

@@ -4,7 +4,7 @@ import { basename, join, normalize, isAbsolute, sep } from 'path'
 import { existsSync } from 'fs'
 import { appendFile, readFile, realpath } from 'fs/promises'
 import { homedir, tmpdir } from 'os'
-import { type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, mergeSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest, type BrowserPaneFns } from '@craft-agent/shared/agent'
+import { type AgentEvent, setPermissionMode, getModeState, hydratePreviousPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, mergeSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest, type BrowserPaneFns } from '@craft-agent/shared/agent'
 import {
   resolveSessionConnection,
   createBackendFromConnection,
@@ -521,6 +521,8 @@ interface ManagedSession {
   archivedAt?: number
   /** Permission mode for this session ('safe', 'ask', 'allow-all') */
   permissionMode?: PermissionMode
+  /** Previous permission mode (preserved across restarts for mode transition context) */
+  previousPermissionMode?: PermissionMode
   /** Centralized MCP client pool for this session's source connections */
   mcpPool?: McpClientPool
   /** HTTP MCP server exposing pool tools to external SDK subprocesses (Codex, Copilot) */
@@ -1369,6 +1371,7 @@ export class SessionManager {
             isArchived: meta.isArchived,
             archivedAt: meta.archivedAt,
             permissionMode: meta.permissionMode,
+            previousPermissionMode: meta.previousPermissionMode,
             sdkSessionId: meta.sdkSessionId,
             tokenUsage: meta.tokenUsage,  // From JSONL header (updated on save)
             sessionStatus: meta.sessionStatus,
@@ -1410,6 +1413,12 @@ export class SessionManager {
           }
 
           this.sessions.set(meta.id, managed)
+
+          // Restore permission mode state metadata for this session.
+          // This keeps mode transition context (previous mode) stable across restarts.
+          const restoredMode = managed.permissionMode ?? 'ask'
+          setPermissionMode(meta.id, restoredMode, { changedBy: 'restore' })
+          hydratePreviousPermissionMode(meta.id, managed.previousPermissionMode)
 
           // Initialize session metadata in AutomationSystem for diffing
           const automationSystem = this.automationSystems.get(workspaceRootPath)
@@ -1455,6 +1464,7 @@ export class SessionManager {
         isArchived: managed.isArchived,
         archivedAt: managed.archivedAt,
         permissionMode: managed.permissionMode,
+        previousPermissionMode: managed.previousPermissionMode,
         sessionStatus: managed.sessionStatus,
         lastReadMessageId: managed.lastReadMessageId,  // For unread detection
         hasUnread: managed.hasUnread,  // Explicit unread flag for NEW badge state machine
@@ -2045,6 +2055,7 @@ export class SessionManager {
       sessionStatus: options?.sessionStatus,
       labels: options?.labels,
       permissionMode: defaultPermissionMode,
+      previousPermissionMode: undefined,
       workingDirectory: resolvedWorkingDir,
       sdkCwd: storedSession.sdkCwd,
       // Session-specific model takes priority, then workspace default
@@ -2067,6 +2078,8 @@ export class SessionManager {
     }
 
     this.sessions.set(storedSession.id, managed)
+    setPermissionMode(storedSession.id, defaultPermissionMode, { changedBy: 'restore' })
+    hydratePreviousPermissionMode(storedSession.id, undefined)
 
     // Initialize session metadata in AutomationSystem for diffing
     const automationSystem = this.automationSystems.get(workspaceRootPath)
@@ -2147,6 +2160,7 @@ export class SessionManager {
       sessionStatus: storedSession.sessionStatus,
       labels: storedSession.labels,
       permissionMode: defaultPermissionMode,
+      previousPermissionMode: storedSession.previousPermissionMode,
       workingDirectory: storedSession.workingDirectory,
       sdkCwd: storedSession.sdkCwd,
       model: storedSession.model,
@@ -2165,6 +2179,8 @@ export class SessionManager {
     }
 
     this.sessions.set(storedSession.id, managed)
+    setPermissionMode(storedSession.id, defaultPermissionMode, { changedBy: 'restore' })
+    hydratePreviousPermissionMode(storedSession.id, managed.previousPermissionMode)
 
     // Notify all windows that a sub-session was created (for session list updates)
     this.sendEvent({
@@ -2498,7 +2514,10 @@ export class SessionManager {
       // Set up mode change handlers
       managed.agent.onPermissionModeChange = (mode) => {
         sessionLog.info(`Permission mode changed for session ${managed.id}:`, mode)
-        managed.permissionMode = mode
+        setPermissionMode(managed.id, mode, { changedBy: 'system' })
+        const modeState = getModeState(managed.id)
+        managed.permissionMode = modeState.permissionMode
+        managed.previousPermissionMode = modeState.previousPermissionMode
         this.sendEvent({
           type: 'permission_mode_changed',
           sessionId: managed.id,
@@ -2772,7 +2791,8 @@ export class SessionManager {
       // Apply session-scoped permission mode to the newly created agent
       // This ensures the UI toggle state is reflected in the agent before first message
       if (managed.permissionMode) {
-        setPermissionMode(managed.id, managed.permissionMode)
+        setPermissionMode(managed.id, managed.permissionMode, { changedBy: 'restore' })
+        hydratePreviousPermissionMode(managed.id, managed.previousPermissionMode)
         managed.agent!.setPermissionMode(managed.permissionMode)
         sessionLog.info(`Applied permission mode '${managed.permissionMode}' to agent for session ${managed.id}`)
       }
@@ -4441,22 +4461,27 @@ To view this task's output:
   setSessionPermissionMode(sessionId: string, mode: PermissionMode): void {
     const managed = this.sessions.get(sessionId)
     if (managed) {
-      // Update permission mode
-      managed.permissionMode = mode
+      // Update the mode state for this specific session via mode manager.
+      // This tracks previous mode + transition metadata.
+      const changed = setPermissionMode(sessionId, mode, { changedBy: 'user' })
+      const modeState = getModeState(sessionId)
+      managed.permissionMode = modeState.permissionMode
+      managed.previousPermissionMode = modeState.previousPermissionMode
 
-      // Update the mode state for this specific session via mode manager
-      setPermissionMode(sessionId, mode)
+      if (!changed) {
+        return
+      }
 
       // Forward to the agent instance so backends (e.g. PiAgent) can
       // propagate the mode change to their subprocess
       if (managed.agent) {
-        managed.agent.setPermissionMode(mode)
+        managed.agent.setPermissionMode(modeState.permissionMode)
       }
 
       this.sendEvent({
         type: 'permission_mode_changed',
         sessionId: managed.id,
-        permissionMode: mode,
+        permissionMode: modeState.permissionMode,
       }, managed.workspace.id)
       // Persist to disk
       this.persistSession(managed)

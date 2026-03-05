@@ -52,6 +52,8 @@ export {
   PERMISSION_MODE_CONFIG,
   type PermissionMode,
   getModeState,
+  hydratePreviousPermissionMode,
+  getPermissionModeDiagnostics,
   initializeModeState,
   cleanupModeState,
   // Tool blocking (centralized)
@@ -66,6 +68,7 @@ export {
   SAFE_MODE_CONFIG,
   // Types
   type ModeState,
+  type PermissionModeChangedBy,
   type ModeCallbacks,
   type ModeConfig,
 } from './mode-manager.ts';
