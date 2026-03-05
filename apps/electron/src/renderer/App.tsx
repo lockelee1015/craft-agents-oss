@@ -260,6 +260,7 @@ export default function App() {
 
   // Ref for sessionOptions to access current value in event handlers without re-registering
   const sessionOptionsRef = useRef(sessionOptions)
+  const permissionModeVersionRef = useRef<Map<string, number>>(new Map())
   // Keep ref in sync with state
   useEffect(() => {
     sessionOptionsRef.current = sessionOptions
@@ -488,6 +489,14 @@ export default function App() {
             break
           }
           case 'permission_mode_changed': {
+            // Ignore out-of-order mode updates when version metadata is present.
+            if (typeof effect.modeVersion === 'number') {
+              const currentVersion = permissionModeVersionRef.current.get(effect.sessionId) ?? -1
+              if (effect.modeVersion < currentVersion) {
+                break
+              }
+              permissionModeVersionRef.current.set(effect.sessionId, effect.modeVersion)
+            }
             setSessionOptions(prevOpts => {
               const next = new Map(prevOpts)
               const current = next.get(effect.sessionId) ?? defaultSessionOptions

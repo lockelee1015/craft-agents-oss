@@ -365,6 +365,11 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
     return sessionManager.respondToPermission(sessionId, requestId, allowed, alwaysAllow)
   })
 
+  // Query current permission mode state from main-process source of truth.
+  ipcMain.handle(IPC_CHANNELS.GET_SESSION_PERMISSION_MODE_STATE, async (_event, sessionId: string) => {
+    return sessionManager.getSessionPermissionModeState(sessionId)
+  })
+
   // Respond to a credential request (secure auth input)
   // Returns true if the response was delivered, false if agent/session is gone
   ipcMain.handle(IPC_CHANNELS.RESPOND_TO_CREDENTIAL, async (_event, sessionId: string, requestId: string, response: import('../shared/types').CredentialResponse) => {

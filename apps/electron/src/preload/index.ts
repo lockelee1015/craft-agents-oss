@@ -17,6 +17,8 @@ const api: ElectronAPI = {
   getTaskOutput: (taskId: string) => ipcRenderer.invoke(IPC_CHANNELS.GET_TASK_OUTPUT, taskId),
   respondToPermission: (sessionId: string, requestId: string, allowed: boolean, alwaysAllow: boolean) =>
     ipcRenderer.invoke(IPC_CHANNELS.RESPOND_TO_PERMISSION, sessionId, requestId, allowed, alwaysAllow),
+  getSessionPermissionModeState: (sessionId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.GET_SESSION_PERMISSION_MODE_STATE, sessionId),
   respondToCredential: (sessionId: string, requestId: string, response: import('../shared/types').CredentialResponse) =>
     ipcRenderer.invoke(IPC_CHANNELS.RESPOND_TO_CREDENTIAL, sessionId, requestId, response),
 

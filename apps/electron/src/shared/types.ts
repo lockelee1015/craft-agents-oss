@@ -498,6 +498,16 @@ export interface CreateSessionOptions {
   enabledSourceSlugs?: string[]
 }
 
+export type PermissionModeChangedBy = 'user' | 'system' | 'restore' | 'automation' | 'unknown'
+
+export interface PermissionModeState {
+  permissionMode: PermissionMode
+  previousPermissionMode?: PermissionMode
+  modeVersion: number
+  changedAt: string
+  changedBy: PermissionModeChangedBy
+}
+
 // Events sent from main to renderer
 // turnId: Correlation ID from the API's message.id, groups all events in an assistant turn
 export type SessionEvent =
@@ -519,7 +529,15 @@ export type SessionEvent =
   | { type: 'permission_request'; sessionId: string; request: PermissionRequest }
   | { type: 'credential_request'; sessionId: string; request: CredentialRequest }
   // Permission mode events
-  | { type: 'permission_mode_changed'; sessionId: string; permissionMode: PermissionMode }
+  | {
+    type: 'permission_mode_changed'
+    sessionId: string
+    permissionMode: PermissionMode
+    previousPermissionMode?: PermissionMode
+    modeVersion?: number
+    changedAt?: string
+    changedBy?: PermissionModeChangedBy
+  }
   | { type: 'plan_submitted'; sessionId: string; message: CoreMessage }
   // Source events
   | { type: 'sources_changed'; sessionId: string; enabledSourceSlugs: string[] }
@@ -673,6 +691,7 @@ export const IPC_CHANNELS = {
   KILL_SHELL: 'sessions:killShell',
   GET_TASK_OUTPUT: 'tasks:getOutput',
   RESPOND_TO_PERMISSION: 'sessions:respondToPermission',
+  GET_SESSION_PERMISSION_MODE_STATE: 'sessions:getPermissionModeState',
   RESPOND_TO_CREDENTIAL: 'sessions:respondToCredential',
 
   // Consolidated session command
@@ -1028,6 +1047,7 @@ export interface ElectronAPI {
   killShell(sessionId: string, shellId: string): Promise<{ success: boolean; error?: string }>
   getTaskOutput(taskId: string): Promise<string | null>
   respondToPermission(sessionId: string, requestId: string, allowed: boolean, alwaysAllow: boolean): Promise<boolean>
+  getSessionPermissionModeState(sessionId: string): Promise<PermissionModeState | null>
   respondToCredential(sessionId: string, requestId: string, response: CredentialResponse): Promise<boolean>
 
   // Consolidated session command handler

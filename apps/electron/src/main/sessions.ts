@@ -68,7 +68,7 @@ import { resolveAuthEnvVars } from '@craft-agent/shared/config'
 import { toolMetadataStore } from '@craft-agent/shared/interceptor'
 import { getCredentialManager } from '@craft-agent/shared/credentials'
 import { CraftMcpClient, McpClientPool, McpPoolServer } from '@craft-agent/shared/mcp'
-import { type Session, type Message, type SessionEvent, type FileAttachment, type StoredAttachment, type SendMessageOptions, type SessionSlashCommand, IPC_CHANNELS, generateMessageId } from '../shared/types'
+import { type Session, type Message, type SessionEvent, type FileAttachment, type StoredAttachment, type SendMessageOptions, type SessionSlashCommand, type PermissionModeState, IPC_CHANNELS, generateMessageId } from '../shared/types'
 import { formatPathsToRelative, formatToolInputPaths, perf, encodeIconToDataUrl, getEmojiIcon, resetSummarizationClient, resolveToolIcon, readFileAttachment } from '@craft-agent/shared/utils'
 import { loadAllSkills, loadSkillBySlug, type LoadedSkill } from '@craft-agent/shared/skills'
 import type { ToolDisplayMeta } from '@craft-agent/core/types'
@@ -2522,6 +2522,10 @@ export class SessionManager {
           type: 'permission_mode_changed',
           sessionId: managed.id,
           permissionMode: managed.permissionMode,
+          previousPermissionMode: modeState.previousPermissionMode,
+          modeVersion: modeState.modeVersion,
+          changedAt: modeState.lastChangedAt,
+          changedBy: modeState.lastChangedBy,
         }, managed.workspace.id)
       }
 
@@ -4426,6 +4430,24 @@ To view this task's output:
   }
 
   /**
+   * Get authoritative permission mode state for a session.
+   * Used by renderer to reconcile local state after rapid mode changes/events.
+   */
+  getSessionPermissionModeState(sessionId: string): PermissionModeState | null {
+    const managed = this.sessions.get(sessionId)
+    if (!managed) return null
+
+    const state = getModeState(sessionId)
+    return {
+      permissionMode: state.permissionMode,
+      previousPermissionMode: state.previousPermissionMode ?? managed.previousPermissionMode,
+      modeVersion: state.modeVersion,
+      changedAt: state.lastChangedAt,
+      changedBy: state.lastChangedBy,
+    }
+  }
+
+  /**
    * Respond to a pending credential request
    * Returns true if the response was delivered, false if no pending request found
    *
@@ -4482,6 +4504,10 @@ To view this task's output:
         type: 'permission_mode_changed',
         sessionId: managed.id,
         permissionMode: modeState.permissionMode,
+        previousPermissionMode: modeState.previousPermissionMode,
+        modeVersion: modeState.modeVersion,
+        changedAt: modeState.lastChangedAt,
+        changedBy: modeState.lastChangedBy,
       }, managed.workspace.id)
       // Persist to disk
       this.persistSession(managed)
