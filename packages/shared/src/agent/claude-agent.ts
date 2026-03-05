@@ -9,7 +9,7 @@ type ContentBlockParam =
 import { z } from 'zod';
 import { getSystemPrompt } from '../prompts/system.ts';
 import { BaseAgent, type MiniAgentConfig, MINI_AGENT_TOOLS, MINI_AGENT_MCP_KEYS } from './base-agent.ts';
-import type { BackendConfig, PostInitResult, PermissionRequestType, SdkMcpServerConfig, SupportedSlashCommand } from './backend/types.ts';
+import type { BackendConfig, PostInitResult, SdkMcpServerConfig, SupportedSlashCommand } from './backend/types.ts';
 // Plan types are used by UI components; not needed in craft-agent.ts since Safe Mode is user-controlled
 import { parseError, type AgentError } from './errors.ts';
 import { runErrorDiagnostics } from './diagnostics.ts';
@@ -360,7 +360,7 @@ export class ClaudeAgent extends BaseAgent {
   }
 
   // Callback for permission requests - set by application to receive permission prompts
-  public onPermissionRequest: ((request: { requestId: string; toolName: string; command?: string; description: string; type?: PermissionRequestType }) => void) | null = null;
+  public onPermissionRequest: PermissionCallback | null = null;
 
   // Debug callback for status messages
   public onDebug: ((message: string) => void) | null = null;
@@ -825,6 +825,7 @@ export class ClaudeAgent extends BaseAgent {
               const checkResult = runPreToolUseChecks({
                 toolName: input.tool_name,
                 input: toolInput,
+                sessionId,
                 permissionMode,
                 workspaceRootPath: this.workspaceRootPath,
                 workspaceId: extractWorkspaceSlug(this.workspaceRootPath, this.config.workspace.id),
@@ -942,6 +943,13 @@ export class ClaudeAgent extends BaseAgent {
                       command,
                       description: checkResult.description,
                       type: checkResult.promptType,
+                      appName: checkResult.appName,
+                      reason: checkResult.reason,
+                      impact: checkResult.impact,
+                      requiresSystemPrompt: checkResult.requiresSystemPrompt,
+                      rememberForMinutes: checkResult.rememberForMinutes,
+                      commandHash: checkResult.commandHash,
+                      approvalTtlSeconds: checkResult.approvalTtlSeconds,
                     });
                   } else {
                     this.pendingPermissions.delete(requestId);

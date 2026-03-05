@@ -2494,7 +2494,7 @@ export class SessionManager {
       managed.agentReadyResolve?.()
 
       // Set up permission handler to forward requests to renderer
-      managed.agent.onPermissionRequest = (request: { requestId: string; toolName: string; command?: string; description: string; type?: 'bash' | 'file_write' | 'mcp_mutation' | 'api_mutation' }) => {
+      managed.agent.onPermissionRequest = (request) => {
         sessionLog.info(`Permission request for session ${managed.id}:`, request.command)
         this.sendEvent({
           type: 'permission_request',

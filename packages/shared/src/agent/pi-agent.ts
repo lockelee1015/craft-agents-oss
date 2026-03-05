@@ -744,6 +744,7 @@ export class PiAgent extends BaseAgent {
     const checkResult = runPreToolUseChecks({
       toolName,
       input,
+      sessionId,
       permissionMode: this.permissionManager.getPermissionMode(),
       workspaceRootPath: this.workingDirectory,
       workspaceId: workspaceSlug,
@@ -803,6 +804,7 @@ export class PiAgent extends BaseAgent {
         const postResult = runPreToolUseChecks({
           toolName,
           input,
+          sessionId,
           permissionMode: this.permissionManager.getPermissionMode(),
           workspaceRootPath: this.workingDirectory,
           workspaceId: workspaceSlug,
@@ -860,6 +862,13 @@ export class PiAgent extends BaseAgent {
           command: checkResult.command,
           description: checkResult.description,
           type: checkResult.promptType,
+          appName: checkResult.appName,
+          reason: checkResult.reason,
+          impact: checkResult.impact,
+          requiresSystemPrompt: checkResult.requiresSystemPrompt,
+          rememberForMinutes: checkResult.rememberForMinutes,
+          commandHash: checkResult.commandHash,
+          approvalTtlSeconds: checkResult.approvalTtlSeconds,
         });
 
         const allowed = await permissionPromise;

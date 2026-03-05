@@ -58,7 +58,7 @@ export interface SupportedSlashCommand {
 /**
  * Permission prompt types for different tool categories.
  */
-export type PermissionRequestType = 'bash' | 'file_write' | 'mcp_mutation' | 'api_mutation';
+export type PermissionRequestType = 'bash' | 'file_write' | 'mcp_mutation' | 'api_mutation' | 'admin_approval';
 
 /**
  * Permission request callback signature.
@@ -70,6 +70,13 @@ export type PermissionCallback = (request: {
   command?: string;
   description: string;
   type?: PermissionRequestType;
+  appName?: string;
+  reason?: string;
+  impact?: string;
+  requiresSystemPrompt?: boolean;
+  rememberForMinutes?: number;
+  commandHash?: string;
+  approvalTtlSeconds?: number;
 }) => void;
 
 /**
