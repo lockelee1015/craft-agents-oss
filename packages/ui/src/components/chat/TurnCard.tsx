@@ -407,7 +407,7 @@ function formatToolInput(
 
   for (const [key, value] of Object.entries(input)) {
     // Skip meta fields and description (shown separately)
-    if (key === '_intent' || key === 'description' || value === undefined || value === null) continue
+    if (key === '_intent' || key === '_displayName' || key === 'description' || value === undefined || value === null) continue
 
     // For Edit/Write tools, only include file_path
     if (isEditOrWrite && key !== 'file_path') continue
