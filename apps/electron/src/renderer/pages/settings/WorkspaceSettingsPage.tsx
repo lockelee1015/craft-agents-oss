@@ -148,7 +148,8 @@ export default function WorkspaceSettingsPage() {
   // Subscribe to live source changes (additions/removals)
   useEffect(() => {
     if (!window.electronAPI) return
-    const cleanup = window.electronAPI.onSourcesChanged((sources: LoadedSource[]) => {
+    const cleanup = window.electronAPI.onSourcesChanged((changedWorkspaceId: string, sources: LoadedSource[]) => {
+      if (changedWorkspaceId !== activeWorkspaceId) return
       setAvailableSources(sources)
       // Auto-heal: remove slugs for sources that no longer exist
       const validSlugs = new Set(sources.map(s => s.config.slug))

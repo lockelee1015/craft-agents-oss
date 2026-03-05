@@ -875,21 +875,25 @@ function AppShellContent({
 
   // Subscribe to live source updates (when sources are added/removed dynamically)
   React.useEffect(() => {
-    const cleanup = window.electronAPI.onSourcesChanged((updatedSources) => {
+    if (!activeWorkspaceId) return
+    const cleanup = window.electronAPI.onSourcesChanged((changedWorkspaceId, updatedSources) => {
+      if (changedWorkspaceId !== activeWorkspaceId) return
       // Clear icon cache so updated source icons are re-fetched on render
       clearSourceIconCaches()
       setSources(updatedSources || [])
     })
     return cleanup
-  }, [])
+  }, [activeWorkspaceId])
 
   // Subscribe to live skill updates (when skills are added/removed dynamically)
   React.useEffect(() => {
-    const cleanup = window.electronAPI.onSkillsChanged((updatedSkills) => {
+    if (!activeWorkspaceId) return
+    const cleanup = window.electronAPI.onSkillsChanged((changedWorkspaceId, updatedSkills) => {
+      if (changedWorkspaceId !== activeWorkspaceId) return
       setSkills(updatedSkills || [])
     })
     return cleanup
-  }, [])
+  }, [activeWorkspaceId])
 
   // Handle session source selection changes
   const handleSessionSourcesChange = React.useCallback(async (sessionId: string, sourceSlugs: string[]) => {
